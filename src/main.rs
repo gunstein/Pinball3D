@@ -1,0 +1,66 @@
+use bevy::core::Zeroable;
+use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::rapier::na::Vector3;
+
+mod walls;
+use walls::*;
+
+mod flippers;
+use flippers::*;
+
+mod ball;
+use ball::*;
+
+mod utils;
+
+fn main() {
+    App::new()
+        .insert_resource(WindowDescriptor {
+            title: "Pinball3d".to_string(),
+            width: 360.0,
+            height: 640.0,
+            ..Default::default()
+        })
+        .insert_resource(Msaa::default())
+        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
+        .add_plugins(DefaultPlugins)
+        .add_plugin(WallsPlugin)
+        .add_plugin(FlippersPlugin)
+        .add_plugin(BallPlugin)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugin(RapierDebugRenderPlugin::default())
+        .add_startup_system(setup.label("main_setup"))
+        .run();
+}
+
+
+fn setup(
+    mut commands: Commands,
+    mut rapier_config: ResMut<RapierConfiguration>,
+) {
+    // Set gravity to x and spawn camera.
+    rapier_config.gravity = Vec3::zeroed();
+    //rapier_config.gravity = Vec3::new(0.0, -0.5, 0.0);
+
+    // camera
+    /* 
+    commands.spawn_bundle(Camera3dBundle {
+        //transform: Transform::from_xyz(0.0, 0.5, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.0, -2.5, 2.7).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Y),
+        //transform: Transform::from_xyz(0.0, -0.1, 1.2).looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    }); 
+    */
+    commands
+    .spawn_bundle(Camera3dBundle{
+        //transform: Transform::from_xyz(-0.1, -1.0, 0.1).looking_at(Vec3::new(-0.1, -0.5, 0.0), Vec3::Z),
+        transform: Transform::from_xyz(-0.1, -2.5, 2.0).looking_at(Vec3::new(-0.1, -0.5, 0.0), Vec3::Y),
+        ..default()
+    });
+    /* 
+    .insert(UiCameraConfig {
+        show_ui: false,
+        ..default()
+    });*/
+}
