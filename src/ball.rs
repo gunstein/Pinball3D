@@ -22,7 +22,7 @@ fn spawn_ball(
     mut materials: ResMut<Assets<StandardMaterial>>,
 )
 {
-    let ball_pos = Vec3::new(0.1, -1.0, 0.5);
+    let ball_pos = Vec3::new(0.3, 0.0, 0.1);
 
     /*let shape_ball = bevy::prelude::shape::Icosphere {
         radius: 0.01,
@@ -30,26 +30,27 @@ fn spawn_ball(
     };*/
 
     let entity_id = commands.spawn()
-    /* .insert_bundle(PbrBundle {
+    .insert_bundle(PbrBundle {
         //mesh: meshes.add(Mesh::from(shape_ball)),
         mesh: meshes.add(Mesh::from(shape::UVSphere{
-            radius: 0.03,
+            radius: 0.02,
             ..default()
         })),
-        material: materials.add(Color::rgb(0.1, 0.2, 0.8).into()),
+        material: materials.add(Color::rgb(0.5, 1.7, 0.8).into()),
         //..Default::default()
         ..default()
-    })*/
+    })
     .insert(RigidBody::Dynamic)
     .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
     //.insert(Collider::ball(0.01))
-    .insert(Collider::ball(0.03))
+    .insert(Collider::ball(0.02))
     .insert_bundle(TransformBundle::from(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z)))
     //.insert(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z))
     //.insert(Transform::from_xyz(-0.1, 0.2, 0.3));
     .insert(ExternalForce {
-        force: Vec3::new(0.0, 0.0, 0.0),
+        //force: Vec3::new(0.0, 0.0, 0.0),
+        force: Vec3::new(0.0, 0.00007, -0.0007),
         torque: Vec3::new(0.0, 0.0, 0.0),
     })
     .insert(Velocity {
@@ -58,7 +59,8 @@ fn spawn_ball(
     })
     .insert(ActiveEvents::COLLISION_EVENTS)
     .insert(Restitution::coefficient(0.0))
-    //.insert(CollisionGroups::new(0b0010, 0b0001))
+    //.insert(CollisionGroups::new(0b0001, 0b0100));
+    .insert(CollisionGroups::new(0b0100, 0b0011))
     .insert(Ball);
 }
 
@@ -70,7 +72,9 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
         let max_toi = 100.0;
         let cast_velocity = Vec3::new(0.0, 0.0, -1.0);
         //let filter = QueryFilter::default();
-        let filter = QueryFilter::only_fixed();
+        //let filter = QueryFilter::only_fixed();
+        let filter = QueryFilter::only_fixed().groups(InteractionGroups::new(0b0100, 0b0011));
+
 
         //println!("ball_transform.translation {:?}", ball_transform.translation);
         //println!("ball_transform.rotation {:?}", ball_transform.rotation);
@@ -84,30 +88,37 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
             if hit.toi > 0.0{
                 //ball_force.force = Vec3::new(0.0, 0.0, -0.00007).into();
                 //ball_force.force = Vec3::new(0.0, -0.00007, -0.00007).into();
-                ball_force.force = Vec3::new(0.0, 0.0, -0.00007);
+                
+                //ball_force.force = Vec3::new(0.0, 0.0, -0.0007);
+
                 //ball_force.force = Vec3::new(0.0, -0.00007, 0.0).into();
-                ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
-                info!("push_ball_to_floor 3");
+                //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
+                //info!("push_ball_to_floor 3");
             }
             else{
                 //ball_force.force = Vec3::new(0.0, 0.0, 0.0).into();
                 //ball_force.force = Vec3::new(0.0, 0.00007, 0.0).into();
-                ball_force.force = Vec3::new(0.0, 0.007, 0.0).into();
+
+                //ball_force.force = Vec3::new(0.0, 0.00007, -0.0007);
+
+                //ball_force.force = Vec3::new(0.0, 0.00007, 0.0);
 
                 //ball_force.force = Vec3::new(0.0, 0.0, 0.0);
-                ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
-                ball_velocity.angvel = Vec3::new(0.0, 0.0, 0.0);
-                ball_velocity.linvel = Vec3::new(0.0, 0.0, 0.0);
-                info!("push_ball_to_floor 4");
+                
+                //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
+                //ball_velocity.angvel = Vec3::new(0.0, 0.0, 0.0);
+                //ball_velocity.linvel = Vec3::new(0.0, 0.0, 0.0);
+                //info!("push_ball_to_floor 4");
             }
         }
+        /* 
         else{
             info!("zero force");
             ball_force.force = Vec3::new(0.0, 0.0, 0.0);
             ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
             ball_velocity.angvel = Vec3::new(0.0, 0.0, 0.0);
             ball_velocity.linvel = Vec3::new(0.0, 0.0, 0.0);
-        }
+        }*/
     }
  
 }

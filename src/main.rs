@@ -54,8 +54,11 @@ fn setup(
     */
     commands
     .spawn_bundle(Camera3dBundle{
-        //transform: Transform::from_xyz(-0.1, -1.0, 0.1).looking_at(Vec3::new(-0.1, -0.5, 0.0), Vec3::Z),
-        transform: Transform::from_xyz(-0.1, -2.5, 2.0).looking_at(Vec3::new(-0.1, -0.5, 0.0), Vec3::Y),
+        //transform: Transform::from_xyz(-1.0, 0.5, 0.1).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Z),
+        transform: Transform::from_xyz(0.0, -1.0, 2.0).looking_at(Vec3::new(0.0, -0.2, 0.0), Vec3::Z),
+        //transform: Transform::from_xyz(-0.1, -2.5, 2.0).looking_at(Vec3::new(-0.1, -0.5, 0.0), Vec3::Y),
+        //transform: Transform::from_xyz(-0.5, 1.0, 2.0).looking_at(Vec3::new(-0.5, 1.0, 0.0), Vec3::Y),
+        //transform: Transform::from_xyz(0.0, 0.0, 2.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
         ..default()
     });
     /* 

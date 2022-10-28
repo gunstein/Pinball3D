@@ -3,23 +3,13 @@ use bevy_rapier3d::prelude::*;
 
 pub struct FlippersPlugin;
 
-/* 
-#[derive(Default)]
-struct LeftFlipperInstance(Option<Handle<Mesh>>);
-
-#[derive(Default)]
-struct RightFlipperInstance(Option<Handle<Mesh>>);
-*/
-
 #[derive(Component)]
 struct LeftFlipper{
-    //position: Vec3,
     curr_angle : f32,
  }
 
  #[derive(Component)]
  struct RightFlipper{
-     //position: Vec3,
      curr_angle : f32,
   } 
 
@@ -42,8 +32,8 @@ fn spawn_flippers(
   
     let material = materials.add(Color::rgb(2.0, 0.9, 2.0).into());
 
-    let left_flipper_position = Vec3::new(-0.1, -0.5, 0.0);
-    let right_flipper_position = Vec3::new(0.1, -0.5, 0.0);
+    let left_flipper_position = Vec3::new(-0.1, -0.5, 0.01);
+    let right_flipper_position = Vec3::new(0.1, -0.5, 0.01);
 
 
     let collider_big_cylinder = Collider::round_cylinder(0.02, 0.016, 0.001);
@@ -93,7 +83,6 @@ fn spawn_flippers(
         (position_upper_box, rotation_upper_box, collider_upper_box.clone()),
         (position_lower_box, rotation_lower_box, collider_lower_box.clone())
     ]))
-    //.insert_bundle(TransformBundle::from(Transform::from_xyz(left_flipper_position.x, left_flipper_position.y, left_flipper_position.z)))
     .insert_bundle(TransformBundle::from(
         Transform{
             translation: Vec3::new(right_flipper_position.x, right_flipper_position.y, right_flipper_position.z),
