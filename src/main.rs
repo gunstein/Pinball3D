@@ -40,8 +40,8 @@ fn setup(
     mut rapier_config: ResMut<RapierConfiguration>,
 ) {
     // Set gravity to x and spawn camera.
-    rapier_config.gravity = Vec3::zeroed();
-    //rapier_config.gravity = Vec3::new(0.0, -0.5, 0.0);
+    //rapier_config.gravity = Vec3::zeroed();
+    rapier_config.gravity = Vec3::new(0.0, 0.6, -0.4);
 
     // camera
     /* 

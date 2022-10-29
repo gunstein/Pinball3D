@@ -48,6 +48,7 @@ fn spawn_ball(
     .insert_bundle(TransformBundle::from(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z)))
     //.insert(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z))
     //.insert(Transform::from_xyz(-0.1, 0.2, 0.3));
+    /* 
     .insert(ExternalForce {
         //force: Vec3::new(0.0, 0.0, 0.0),
         force: Vec3::new(0.0, 0.00007, -0.0007),
@@ -57,6 +58,7 @@ fn spawn_ball(
         linvel: Vec3::new(0.0, 0.0, 0.0),
         angvel: Vec3::new(0.0, 0.0, 0.0),
     })
+    */
     .insert(ActiveEvents::COLLISION_EVENTS)
     .insert(Restitution::coefficient(0.0))
     //.insert(CollisionGroups::new(0b0001, 0b0100));

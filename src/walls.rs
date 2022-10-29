@@ -52,15 +52,30 @@ fn spawn_walls(
     .insert_bundle(TransformBundle::from(Transform::from_xyz(wall_position.x, wall_position.y, wall_position.z)));
     */
 
+    /* Not working, too complex mesh for decomposition, it seems.
+    let outer_wall_and_floor_mesh_handle:Handle<Mesh> = asset_server.load("outer_wall_and_floor.glb#Mesh0/Primitive0");
+    commands.spawn() 
+    .insert_bundle(PbrBundle {
+        mesh: outer_wall_and_floor_mesh_handle.clone(),
+        material: material.clone(),
+        ..default()
+    })
+    .insert(RigidBody::Fixed)
+    .insert(AsyncCollider{handle: outer_wall_and_floor_mesh_handle, shape: ComputedColliderShape::ConvexDecomposition(VHACDParameters::default())})
+    .insert(CollisionGroups::new(0b0010, 0b0100))
+    .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, 0.0, 0.0)));
+    */
+
+
     let floor_position = Vec3::new(0.0, 0.0, 0.0);
     let floor_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.4*2.0,0.7*2.0, 0.01*2.0)));
 
     commands.spawn()
-    /*.insert_bundle(PbrBundle {
+    .insert_bundle(PbrBundle {
         mesh: floor_mesh_handle.clone(),
         material: material.clone(),
         ..default()
-    })*/
+    })
     .insert(RigidBody::Fixed)
     .insert(Collider::cuboid(0.4, 0.7, 0.01))
     .insert(CollisionGroups::new(0b0001, 0b0100))
@@ -80,9 +95,9 @@ fn spawn_walls(
     .insert(Collider::cuboid(0.01,0.5, 0.05))
     .insert(CollisionGroups::new(0b0001, 0b0100))
     .insert_bundle(TransformBundle::from(Transform::from_xyz(left_wall_position.x, left_wall_position.y, left_wall_position.z)));    
-
+    
     let right_wall_position = Vec3::new(0.39, -0.2, 0.06);
-
+ 
     commands.spawn()
     .insert_bundle(PbrBundle {
         mesh: leftright_wall_mesh_handle.clone(),
@@ -95,13 +110,14 @@ fn spawn_walls(
     .insert_bundle(TransformBundle::from(Transform::from_xyz(right_wall_position.x, right_wall_position.y, right_wall_position.z)));    
     
     let half_circle_wall_mesh_handle:Handle<Mesh> = asset_server.load("half_circle_wall.glb#Mesh0/Primitive0");
+
     let half_circle_wall_position = Vec3::new(0.0, 0.3, 0.01);
     //let half_circle_wall_position = Vec3::new(0.0, 0.0, 0.0);
 
 
     //Build heights vector
     let mut heights = Vec::new();
-    let radius : f32 = 0.4;
+    let radius : f32 = 0.38;
     let radius_squared: f32 = radius * radius;
     let num_cols = 21;
     let step_size = (radius * 2.0) / (num_cols as f32 -1.0);
@@ -115,7 +131,6 @@ fn spawn_walls(
     println!("heights {:?}", heights);
 
     commands.spawn() 
-    
     .insert_bundle(PbrBundle {
         mesh: half_circle_wall_mesh_handle.clone(),
         material: material.clone(),
@@ -123,14 +138,16 @@ fn spawn_walls(
     })
     .insert(RigidBody::Fixed)
     //.insert(AsyncCollider{handle: half_circle_wall_mesh_handle, shape: ComputedColliderShape::TriMesh})
+    //.insert(AsyncCollider{handle: half_circle_wall_mesh_handle, shape: ComputedColliderShape::ConvexDecomposition(VHACDParameters::default())})
     //.insert(Collider::heightfield(vec!(0.1, 0.1, 0.2, 0.2, 0.4, 0.4, 0.2, 0.2, 0.1, 0.1), 2, 5, Vector3::new(0.8, 1.0, 0.1)))
     .with_children(|children| {
         children.spawn()
-        .insert(Collider::heightfield(heights, 2, num_cols, Vector3::new(0.8, 1.0, 0.1)))
+        .insert(Collider::heightfield(heights, 2, num_cols, Vector3::new(0.76, 1.0, 0.1)))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, -0.01, 0.05)));
     })
     .insert(CollisionGroups::new(0b0010, 0b0100))
     .insert_bundle(TransformBundle::from(Transform::from_xyz(half_circle_wall_position.x, half_circle_wall_position.y, half_circle_wall_position.z)));    
+    
 }
 
 /* 
