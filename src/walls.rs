@@ -1,14 +1,17 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-pub struct WallsPlugin;
-use bevy_rapier3d::rapier::na::Vector3;
+use super::Pinball3DSystems;
 
+pub struct WallsPlugin;
+
+#[derive(Component)]
+pub struct Floor;
 
 impl Plugin for WallsPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system(spawn_walls.after("main_setup").label("walls"));
+            .add_startup_system(spawn_walls.after(Pinball3DSystems::Main));
     }
 }
 
@@ -18,6 +21,8 @@ fn spawn_walls(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    //info!("spawn_walls start");
+
     let material = materials.add(Color::rgb(2.0, 0.9, 2.0).into());
 
     /* 
@@ -70,7 +75,7 @@ fn spawn_walls(
     let floor_position = Vec3::new(0.0, 0.0, 0.0);
     let floor_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.4*2.0,0.7*2.0, 0.01*2.0)));
 
-    commands.spawn()
+    let floor = commands.spawn()
     .insert_bundle(PbrBundle {
         mesh: floor_mesh_handle.clone(),
         material: material.clone(),
@@ -78,14 +83,26 @@ fn spawn_walls(
     })
     .insert(RigidBody::Fixed)
     .insert(Collider::cuboid(0.4, 0.7, 0.01))
-    .insert(CollisionGroups::new(0b0001, 0b0100))
-    .insert_bundle(TransformBundle::from(Transform::from_xyz(floor_position.x, floor_position.y, floor_position.z)));
+    //.insert(CollisionGroups::new(0b0001, 0b0100))
+    .insert(CollisionGroups{memberships:Group::GROUP_1, filters:Group::GROUP_3})
+    //.insert_bundle(TransformBundle::from(Transform::from_xyz(floor_position.x, floor_position.y, floor_position.z)))
+    .insert_bundle(TransformBundle::from(
+        Transform{
+            translation: Vec3::new(floor_position.x, floor_position.y, floor_position.z),
+            //rotation: Quat::from_rotation_z(0.3),
+            ..default()
+        }
+    ))
+    .insert(Floor)
+    .id();
 
+    //info!("Floor is spawned");
 
+    //Left wall
     let leftright_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.5*2.0, 0.05*2.0)));
     let left_wall_position = Vec3::new(-0.39, -0.2, 0.06);
     
-    commands.spawn()
+    let left_wall = commands.spawn()
     .insert_bundle(PbrBundle {
         mesh: leftright_wall_mesh_handle.clone(),
         material: material.clone(),
@@ -93,12 +110,15 @@ fn spawn_walls(
     })
     .insert(RigidBody::Fixed)
     .insert(Collider::cuboid(0.01,0.5, 0.05))
-    .insert(CollisionGroups::new(0b0001, 0b0100))
-    .insert_bundle(TransformBundle::from(Transform::from_xyz(left_wall_position.x, left_wall_position.y, left_wall_position.z)));    
+    //.insert(CollisionGroups::new(0b0010, 0b0100))
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
+    .insert_bundle(TransformBundle::from(Transform::from_xyz(left_wall_position.x, left_wall_position.y, left_wall_position.z)))
+    .id();
     
+    //Right wall
     let right_wall_position = Vec3::new(0.39, -0.2, 0.06);
  
-    commands.spawn()
+    let right_wall = commands.spawn()
     .insert_bundle(PbrBundle {
         mesh: leftright_wall_mesh_handle.clone(),
         material: material.clone(),
@@ -106,14 +126,16 @@ fn spawn_walls(
     })
     .insert(RigidBody::Fixed)
     .insert(Collider::cuboid(0.01,0.5, 0.05))
-    .insert(CollisionGroups::new(0b0001, 0b0100))
-    .insert_bundle(TransformBundle::from(Transform::from_xyz(right_wall_position.x, right_wall_position.y, right_wall_position.z)));    
+    //.insert(CollisionGroups::new(0b0010, 0b0100))
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
+    .insert_bundle(TransformBundle::from(Transform::from_xyz(right_wall_position.x, right_wall_position.y, right_wall_position.z)))
+    .id();
     
+    //Half circle wall
     let half_circle_wall_mesh_handle:Handle<Mesh> = asset_server.load("half_circle_wall.glb#Mesh0/Primitive0");
 
     let half_circle_wall_position = Vec3::new(0.0, 0.3, 0.01);
     //let half_circle_wall_position = Vec3::new(0.0, 0.0, 0.0);
-
 
     //Build heights vector
     let mut heights = Vec::new();
@@ -128,9 +150,9 @@ fn spawn_walls(
         heights.push(y);
     }
 
-    println!("heights {:?}", heights);
+    //println!("heights {:?}", heights);
 
-    commands.spawn() 
+    let half_circle_wall = commands.spawn() 
     .insert_bundle(PbrBundle {
         mesh: half_circle_wall_mesh_handle.clone(),
         material: material.clone(),
@@ -142,12 +164,65 @@ fn spawn_walls(
     //.insert(Collider::heightfield(vec!(0.1, 0.1, 0.2, 0.2, 0.4, 0.4, 0.2, 0.2, 0.1, 0.1), 2, 5, Vector3::new(0.8, 1.0, 0.1)))
     .with_children(|children| {
         children.spawn()
-        .insert(Collider::heightfield(heights, 2, num_cols, Vector3::new(0.76, 1.0, 0.1)))
+        .insert(Collider::heightfield(heights, 2, num_cols, Vec3::new(0.76, 1.0, 0.1)))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, -0.01, 0.05)));
     })
-    .insert(CollisionGroups::new(0b0010, 0b0100))
-    .insert_bundle(TransformBundle::from(Transform::from_xyz(half_circle_wall_position.x, half_circle_wall_position.y, half_circle_wall_position.z)));    
+    //.insert(CollisionGroups::new(0b0010, 0b0100))
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
+    .insert_bundle(TransformBundle::from(Transform::from_xyz(half_circle_wall_position.x, half_circle_wall_position.y, half_circle_wall_position.z)))
+    .id();
+
+    //Left flipper wall
+    let left_flipper_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.2*2.0, 0.05*2.0)));
+    let left_flipper_wall_position = Vec3::new(-0.25, -0.35, 0.06);
     
+    let left_flipper_wall = commands.spawn()
+    .insert_bundle(PbrBundle {
+        mesh: left_flipper_wall_mesh_handle.clone(),
+        material: material.clone(),
+        ..default()
+    })
+    .insert(RigidBody::Fixed)
+    .insert(Collider::cuboid(0.01,0.2, 0.05))
+    //.insert(CollisionGroups::new(0b0010, 0b0100))
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
+    .insert_bundle(TransformBundle::from(
+        Transform{
+            translation: Vec3::new(left_flipper_wall_position.x, left_flipper_wall_position.y, left_flipper_wall_position.z),
+            rotation: Quat::from_rotation_z(0.8),
+            ..default()
+        }
+    ))
+    .id();
+    
+    //Right flipper wall
+    let right_flipper_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.2*2.0, 0.05*2.0)));
+    let right_flipper_wall_position = Vec3::new(0.25, -0.35, 0.06);
+    
+    let right_flipper_wall = commands.spawn()
+    .insert_bundle(PbrBundle {
+        mesh: right_flipper_wall_mesh_handle.clone(),
+        material: material.clone(),
+        ..default()
+    })
+    .insert(RigidBody::Fixed)
+    .insert(Collider::cuboid(0.01,0.2, 0.05))
+    //.insert(CollisionGroups::new(0b0010, 0b0100))
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
+    .insert_bundle(TransformBundle::from(
+        Transform{
+            translation: Vec3::new(right_flipper_wall_position.x, right_flipper_wall_position.y, right_flipper_wall_position.z),
+            rotation: Quat::from_rotation_z(-0.8),
+            ..default()
+        }
+    ))
+    .id();
+
+    //Add all walls as children to floor
+    //commands.entity(floor).add_children(|parent|{[left_wall, right_wall, half_circle_wall, left_flipper_wall, right_flipper_wall]});
+    //commands.entity(floor).add_child(left_wall);
+    commands.entity(floor).push_children(&[left_wall, right_wall, half_circle_wall, left_flipper_wall, right_flipper_wall]);
+    //info!("spawn_walls end");
 }
 
 /* 

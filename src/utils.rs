@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+/*use bevy::prelude::*;
 use bevy::{
     prelude::Mesh,
     render::{
@@ -31,3 +31,4 @@ pub fn mesh_to_convexdecomp_collider_shape(mesh: &Mesh) -> Option<Collider> {
     info!("test2");
     Some(Collider::convex_decomposition(&vertices, &indices))
 }
+*/

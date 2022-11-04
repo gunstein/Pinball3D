@@ -2,13 +2,14 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 //
+use super::Pinball3DSystems;
 
 pub struct BallPlugin;
 
 impl Plugin for BallPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system(spawn_ball.after("main_setup").label("ball"))
+            .add_startup_system(spawn_ball.after(Pinball3DSystems::Main))
             .add_system(push_ball_to_floor);
     }
 }
@@ -22,7 +23,7 @@ fn spawn_ball(
     mut materials: ResMut<Assets<StandardMaterial>>,
 )
 {
-    let ball_pos = Vec3::new(0.3, 0.0, 0.1);
+    let ball_pos = Vec3::new(0.3, 0.0, 0.03);
 
     /*let shape_ball = bevy::prelude::shape::Icosphere {
         radius: 0.01,
@@ -30,57 +31,75 @@ fn spawn_ball(
     };*/
 
     let entity_id = commands.spawn()
-    .insert_bundle(PbrBundle {
+    /* 
+     .insert_bundle(PbrBundle {
         //mesh: meshes.add(Mesh::from(shape_ball)),
         mesh: meshes.add(Mesh::from(shape::UVSphere{
-            radius: 0.02,
+            radius: 0.015,
             ..default()
         })),
-        material: materials.add(Color::rgb(0.5, 1.7, 0.8).into()),
+        material: materials.add(Color::rgb(2.5, 2.7, 2.8).into()),
         //..Default::default()
         ..default()
-    })
+    })*/
     .insert(RigidBody::Dynamic)
     .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
     //.insert(Collider::ball(0.01))
-    .insert(Collider::ball(0.02))
+    .insert(Collider::ball(0.01))
     .insert_bundle(TransformBundle::from(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z)))
     //.insert(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z))
     //.insert(Transform::from_xyz(-0.1, 0.2, 0.3));
-    /* 
-    .insert(ExternalForce {
+    /* .insert(ExternalForce {
         //force: Vec3::new(0.0, 0.0, 0.0),
-        force: Vec3::new(0.0, 0.00007, -0.0007),
+        force: Vec3::new(0.0, 0.0007, 0.0),
+        torque: Vec3::new(0.0, 0.0, 0.0),
+    })*/
+    .insert(ExternalForce {
+        force: Vec3::new(0.0, 0.0, 0.0),
+        //force: Vec3::new(0.0, 0.0000007, 0.0),
         torque: Vec3::new(0.0, 0.0, 0.0),
     })
     .insert(Velocity {
         linvel: Vec3::new(0.0, 0.0, 0.0),
         angvel: Vec3::new(0.0, 0.0, 0.0),
     })
-    */
     .insert(ActiveEvents::COLLISION_EVENTS)
-    .insert(Restitution::coefficient(0.0))
+    //.insert(ColliderMassProperties::Density(100.0))
+    .insert(Restitution::coefficient(0.1))
     //.insert(CollisionGroups::new(0b0001, 0b0100));
-    .insert(CollisionGroups::new(0b0100, 0b0011))
+    //.insert(CollisionGroups::new(0b0100, 0b0011))
+    .insert(CollisionGroups{memberships:Group::GROUP_3, filters:(Group::GROUP_1 | Group::GROUP_2)})
     .insert(Ball);
 }
 
 
 fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity, &Transform, &Collider), With<Ball>>, rapier_context: Res<RapierContext>) {
     //info!("push_ball_to_floor 0");
+
+    //let test1 = CollisionGroups{memberships:Group::GROUP_3, filters:(Group::GROUP_1 | Group::GROUP_2)};
+    //let test2 = InteractionGroups{memberships:Group::GROUP_1, filter:Group::GROUP_1};
     for (mut ball_force, mut ball_velocity, ball_transform, ball_collider) in query_balls.iter_mut(){
         //info!("push_ball_to_floor 1");
         let max_toi = 100.0;
         let cast_velocity = Vec3::new(0.0, 0.0, -1.0);
         //let filter = QueryFilter::default();
         //let filter = QueryFilter::only_fixed();
-        let filter = QueryFilter::only_fixed().groups(InteractionGroups::new(0b0100, 0b0011));
+        //let filter = QueryFilter::only_fixed().groups(InteractionGroups::new(0b0100, 0b0011));
+        //Only cast to floor.
+        //let filter = QueryFilter::only_fixed().groups(InteractionGroups::new(0b0100, 0b0001));
+        let filter = QueryFilter{
+            //flags: QueryFilterFlags::ONLY_FIXED, 
+            //groups:Some(InteractionGroups{memberships:Group::GROUP_3, filter:Group::GROUP_1}),
+            groups:Some(CollisionGroups{memberships:Group::GROUP_3, filters:Group::GROUP_1}.into()), 
+            //groups:InteractionGroups::new(Group::GROUP_3, Group::GROUP_1)), 
+            ..default()
+        };
 
 
         //println!("ball_transform.translation {:?}", ball_transform.translation);
         //println!("ball_transform.rotation {:?}", ball_transform.rotation);
-
+        //println!("filter {:?}", filter.groups);
 
         if let Some((entity, hit)) = rapier_context.cast_shape(
             ball_transform.translation, ball_transform.rotation, cast_velocity, ball_collider, max_toi, filter
@@ -91,7 +110,7 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
                 //ball_force.force = Vec3::new(0.0, 0.0, -0.00007).into();
                 //ball_force.force = Vec3::new(0.0, -0.00007, -0.00007).into();
                 
-                //ball_force.force = Vec3::new(0.0, 0.0, -0.0007);
+                ball_force.force = Vec3::new(0.0, 0.0, -0.00007);
 
                 //ball_force.force = Vec3::new(0.0, -0.00007, 0.0).into();
                 //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
@@ -103,9 +122,9 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
 
                 //ball_force.force = Vec3::new(0.0, 0.00007, -0.0007);
 
-                //ball_force.force = Vec3::new(0.0, 0.00007, 0.0);
+                //ball_force.force = Vec3::new(0.0, 0.0000007, 0.0);
 
-                //ball_force.force = Vec3::new(0.0, 0.0, 0.0);
+                ball_force.force = Vec3::new(0.0, 0.0, 0.0);
                 
                 //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
                 //ball_velocity.angvel = Vec3::new(0.0, 0.0, 0.0);

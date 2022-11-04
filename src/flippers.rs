@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
+//use super::Pinball3DSystems;
+use super::Floor;
+
 pub struct FlippersPlugin;
 
 #[derive(Component)]
@@ -16,7 +19,8 @@ struct LeftFlipper{
 impl Plugin for FlippersPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system(spawn_flippers.after("main_setup").label("left_flipper"))
+            //.add_startup_system(spawn_flippers.after(Pinball3DSystems::Walls).label(Pinball3DSystems::Flippers))
+            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_flippers)
             .add_system(left_flipper_movement)
             .add_system(right_flipper_movement);
     }
@@ -26,8 +30,17 @@ fn spawn_flippers(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    //query_floors: Query<Entity, With<Floor>>
+    query_floors: Query<(Entity, &Floor)>
 ) {
-
+    info!("Spawn flippers start");
+    let mut floor_entity = None;
+    //for floor in query_floors.iter(){
+    for (entity, floor) in query_floors.iter(){
+        info!("Spawn flippers, floor is found.");
+        //floor_entity = Some(floor);
+        floor_entity = Some(entity);
+    }
     let left_flipper_mesh_handle:Handle<Mesh> = asset_server.load("left_flipper.glb#Mesh0/Primitive0");
   
     let material = materials.add(Color::rgb(2.0, 0.9, 2.0).into());
@@ -52,7 +65,7 @@ fn spawn_flippers(
     let position_lower_box = Vec3::new(0.035, -0.01, 0.02);
     let rotation_lower_box = Quat::from_rotation_z(0.12); 
 
-    commands.spawn()
+    let left_flipper = commands.spawn()
     .insert_bundle(PbrBundle {
         mesh: left_flipper_mesh_handle.clone(),
         material: material.clone(),
@@ -67,9 +80,12 @@ fn spawn_flippers(
         (position_lower_box, rotation_lower_box, collider_lower_box.clone())
     ]))
     .insert_bundle(TransformBundle::from(Transform::from_xyz(left_flipper_position.x, left_flipper_position.y, left_flipper_position.z)))
-    .insert(LeftFlipper{curr_angle:0.0}); 
+    .insert(LeftFlipper{curr_angle:0.0})
+    .id(); 
 
-    commands.spawn()
+    commands.entity(floor_entity.unwrap()).add_child(left_flipper);
+
+    let right_flipper = commands.spawn()
     .insert_bundle(PbrBundle {
         mesh: left_flipper_mesh_handle.clone(),
         material: material.clone(),
@@ -90,7 +106,10 @@ fn spawn_flippers(
             ..default()
         }
     ))
-    .insert(RightFlipper{curr_angle:0.0});     
+    .insert(RightFlipper{curr_angle:0.0})
+    .id();
+    
+    commands.entity(floor_entity.unwrap()).add_child(right_flipper);
 }
 
 
@@ -107,6 +126,7 @@ fn left_flipper_movement(
         if keyboard_input.pressed(KeyCode::Left)
         {
             change_angle = 0.09;
+            //change_angle = 0.15;
         }
         else
         {
@@ -137,6 +157,7 @@ fn right_flipper_movement(
         if keyboard_input.pressed(KeyCode::Right)
         {
             change_angle = -0.09;
+            //change_angle = -0.15;
         }
         else
         {
