@@ -3,6 +3,7 @@ use bevy_rapier3d::prelude::*;
 
 //
 use super::Pinball3DSystems;
+use super::BottomWall;
 
 pub struct BallPlugin;
 
@@ -10,7 +11,8 @@ impl Plugin for BallPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system(spawn_ball.after(Pinball3DSystems::Main))
-            .add_system(push_ball_to_floor);
+            .add_system(push_ball_to_floor)
+            .add_system(handle_ball_intersections_with_bottom_wall);
     }
 }
 
@@ -66,7 +68,7 @@ fn spawn_ball(
     })
     .insert(ActiveEvents::COLLISION_EVENTS)
     //.insert(ColliderMassProperties::Density(100.0))
-    .insert(Restitution::coefficient(0.1))
+    .insert(Restitution::coefficient(0.6))
     //.insert(CollisionGroups::new(0b0001, 0b0100));
     //.insert(CollisionGroups::new(0b0100, 0b0011))
     .insert(CollisionGroups{memberships:Group::GROUP_3, filters:(Group::GROUP_1 | Group::GROUP_2)})
@@ -142,4 +144,30 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
         }*/
     }
  
+}
+
+fn handle_ball_intersections_with_bottom_wall(
+    rapier_context: Res<RapierContext>,
+    query_ball: Query<Entity, With<Ball>>,
+    query_bottom_wall: Query<Entity, With<BottomWall>>,
+    mut commands: Commands,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let mut should_spawn_ball = false;
+
+    for entity_bottom_wall in query_bottom_wall.iter() {
+        for entity_ball in query_ball.iter() {
+            /* Find the intersection pair, if it exists, between two colliders. */
+            if rapier_context.intersection_pair(entity_bottom_wall, entity_ball) == Some(true) {
+                commands.entity(entity_ball).despawn();
+                should_spawn_ball = true;
+            }
+        }
+    }
+
+    if should_spawn_ball
+    {
+        spawn_ball(commands, meshes, materials);
+    }
 }

@@ -48,7 +48,7 @@ fn setup(
 ) {
     // Set gravity to x and spawn camera.
     //rapier_config.gravity = Vec3::zeroed();
-    rapier_config.gravity = Vec3::new(0.0, -0.4, -0.1);
+    rapier_config.gravity = Vec3::new(0.0, 0.0, -1.0);
 
     // camera
     /* 
@@ -62,11 +62,11 @@ fn setup(
     commands
     .spawn_bundle(Camera3dBundle{
         //transform: Transform::from_xyz(-1.0, 0.5, 0.1).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Z),
-        transform: Transform::from_xyz(0.0, -1.0, 2.0).looking_at(Vec3::new(0.0, -0.2, 0.0), Vec3::Z),
-        //transform: Transform::from_xyz(-0.1, -2.5, 2.0).looking_at(Vec3::new(-0.1, -0.5, 0.0), Vec3::Y),
+        transform: Transform::from_xyz(0.0, -0.8, 1.4).looking_at(Vec3::new(0.0, -0.27, 0.0), Vec3::Z),
+        //transform: Transform::from_xyz(0.1, -0.5, 0.5).looking_at(Vec3::new(0.1, -0.5, 0.0), Vec3::Y),
         //transform: Transform::from_xyz(-0.5, 1.0, 2.0).looking_at(Vec3::new(-0.5, 1.0, 0.0), Vec3::Y),
         //transform: Transform::from_xyz(0.0, 0.8, 1.0).looking_at(Vec3::new(0.0, 0.8, 0.0), Vec3::Y),
-        //transform: Transform::from_xyz(0.0, -2.0, 0.0).looking_at(Vec3::new(0.0, -0.2, 0.0), Vec3::Z),
+        //transform: Transform::from_xyz(0.0, -0.8, 0.011).looking_at(Vec3::new(0.0, -0.2, 0.011), Vec3::Z),
         ..default()
     });
     /* 

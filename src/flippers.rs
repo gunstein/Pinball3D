@@ -31,13 +31,14 @@ fn spawn_flippers(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     //query_floors: Query<Entity, With<Floor>>
-    query_floors: Query<(Entity, &Floor)>
+    //query_floors: Query<(Entity, &Floor)>
+    query_floors: Query<Entity, With<Floor>>
 ) {
-    info!("Spawn flippers start");
+    //info!("Spawn flippers start");
     let mut floor_entity = None;
     //for floor in query_floors.iter(){
-    for (entity, floor) in query_floors.iter(){
-        info!("Spawn flippers, floor is found.");
+    for entity in query_floors.iter(){
+        //info!("Spawn flippers, floor is found.");
         //floor_entity = Some(floor);
         floor_entity = Some(entity);
     }
@@ -53,25 +54,26 @@ fn spawn_flippers(
     let position_big_cylinder = Vec3::new(0.0, 0.0, 0.02);
     let rotation_big_cylinder = Quat::from_rotation_x(std::f32::consts::PI/2.0);
 
-    let collider_small_cylinder = Collider::round_cylinder(0.02, 0.007, 0.001);
+    let collider_small_cylinder = Collider::round_cylinder(0.02, 0.007, 0.002);
     let position_small_cylinder = Vec3::new(0.07, 0.0, 0.02);
     let rotation_small_cylinder = Quat::from_rotation_x(std::f32::consts::PI/2.0);
 
-    let collider_upper_box = Collider::cuboid(0.035, 0.002, 0.02);
-    let position_upper_box = Vec3::new(0.035, 0.01, 0.02);
+    let collider_upper_box = Collider::round_cuboid(0.035, 0.004, 0.02, 0.002);
+    let position_upper_box = Vec3::new(0.035, 0.008, 0.02);
     let rotation_upper_box = Quat::from_rotation_z(-0.12);
     
     let collider_lower_box = collider_upper_box.clone();
-    let position_lower_box = Vec3::new(0.035, -0.01, 0.02);
+    let position_lower_box = Vec3::new(0.035, -0.008, 0.02);
     let rotation_lower_box = Quat::from_rotation_z(0.12); 
 
     let left_flipper = commands.spawn()
-    .insert_bundle(PbrBundle {
+    /* .insert_bundle(PbrBundle {
         mesh: left_flipper_mesh_handle.clone(),
         material: material.clone(),
         ..default()
-    }) 
+    })*/ 
     .insert(RigidBody::KinematicPositionBased)
+    .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
     .insert(Collider::compound(vec![
         (position_big_cylinder, rotation_big_cylinder, collider_big_cylinder.clone()),
@@ -86,13 +88,15 @@ fn spawn_flippers(
     commands.entity(floor_entity.unwrap()).add_child(left_flipper);
 
     let right_flipper = commands.spawn()
-    .insert_bundle(PbrBundle {
+    /* .insert_bundle(PbrBundle {
         mesh: left_flipper_mesh_handle.clone(),
         material: material.clone(),
         ..default()
-    }) 
+    }) */
     .insert(RigidBody::KinematicPositionBased)
+    .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
+    //.insert(AsyncCollider{handle: left_flipper_mesh_handle, shape: ComputedColliderShape::TriMesh})
     .insert(Collider::compound(vec![
         (position_big_cylinder, rotation_big_cylinder, collider_big_cylinder.clone()),
         (position_small_cylinder, rotation_small_cylinder, collider_small_cylinder.clone()),
@@ -125,8 +129,8 @@ fn left_flipper_movement(
 
         if keyboard_input.pressed(KeyCode::Left)
         {
-            change_angle = 0.09;
-            //change_angle = 0.15;
+            //change_angle = 0.09;
+            change_angle = 0.18;
         }
         else
         {
@@ -156,8 +160,8 @@ fn right_flipper_movement(
 
         if keyboard_input.pressed(KeyCode::Right)
         {
-            change_angle = -0.09;
-            //change_angle = -0.15;
+            //change_angle = -0.09;
+            change_angle = -0.18;
         }
         else
         {

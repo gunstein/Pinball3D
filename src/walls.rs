@@ -8,6 +8,9 @@ pub struct WallsPlugin;
 #[derive(Component)]
 pub struct Floor;
 
+#[derive(Component)]
+pub struct BottomWall;
+
 impl Plugin for WallsPlugin {
     fn build(&self, app: &mut App) {
         app
@@ -71,7 +74,7 @@ fn spawn_walls(
     .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, 0.0, 0.0)));
     */
 
-
+    //Spawn floor
     let floor_position = Vec3::new(0.0, 0.0, 0.0);
     let floor_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.4*2.0,0.7*2.0, 0.01*2.0)));
 
@@ -89,7 +92,8 @@ fn spawn_walls(
     .insert_bundle(TransformBundle::from(
         Transform{
             translation: Vec3::new(floor_position.x, floor_position.y, floor_position.z),
-            //rotation: Quat::from_rotation_z(0.3),
+            rotation: Quat::from_rotation_x(0.12),
+            //rotation: Quat::from_rotation_x(3.9),
             ..default()
         }
     ))
@@ -173,7 +177,7 @@ fn spawn_walls(
     .id();
 
     //Left flipper wall
-    let left_flipper_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.2*2.0, 0.05*2.0)));
+    let left_flipper_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.17*2.0, 0.05*2.0)));
     let left_flipper_wall_position = Vec3::new(-0.25, -0.35, 0.06);
     
     let left_flipper_wall = commands.spawn()
@@ -196,7 +200,7 @@ fn spawn_walls(
     .id();
     
     //Right flipper wall
-    let right_flipper_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.2*2.0, 0.05*2.0)));
+    let right_flipper_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.17*2.0, 0.05*2.0)));
     let right_flipper_wall_position = Vec3::new(0.25, -0.35, 0.06);
     
     let right_flipper_wall = commands.spawn()
@@ -218,10 +222,28 @@ fn spawn_walls(
     ))
     .id();
 
+    //Spawn bottom wall
+    let bottom_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.4*2.0,0.01*2.0, 0.05*2.0)));
+    let bottom_wall_position = Vec3::new(0.0, -0.7, 0.06);
+    let bottom_wall = commands
+    .spawn()
+    .insert_bundle(PbrBundle {
+        mesh: bottom_wall_mesh_handle.clone(),
+        material: material.clone(),
+        ..default()
+    })
+    .insert(RigidBody::Fixed)
+    .insert(Collider::cuboid(0.4, 0.01, 0.05))
+    .insert(Sensor)
+    .insert_bundle(TransformBundle::from(Transform::from_xyz(bottom_wall_position.x, bottom_wall_position.y, bottom_wall_position.z)))
+    .insert(BottomWall)
+    .id();
+
+
     //Add all walls as children to floor
     //commands.entity(floor).add_children(|parent|{[left_wall, right_wall, half_circle_wall, left_flipper_wall, right_flipper_wall]});
     //commands.entity(floor).add_child(left_wall);
-    commands.entity(floor).push_children(&[left_wall, right_wall, half_circle_wall, left_flipper_wall, right_flipper_wall]);
+    commands.entity(floor).push_children(&[left_wall, right_wall, half_circle_wall, left_flipper_wall, right_flipper_wall, bottom_wall]);
     //info!("spawn_walls end");
 }
 
