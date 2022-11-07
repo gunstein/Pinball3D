@@ -92,13 +92,13 @@ fn spawn_walls(
         .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, -0.01, 0.05)));
         
         //Collider left wall
-        let left_wall_position = Vec3::new(-0.372, -0.51, 0.06);
+        let left_wall_position = Vec3::new(-0.371, -0.51, 0.06);
         children.spawn()
         .insert(Collider::cuboid(0.01,0.5, 0.05))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(left_wall_position.x, left_wall_position.y, left_wall_position.z)));
         
         //Collider right wall
-        let right_wall_position = Vec3::new(0.372, -0.51, 0.06);
+        let right_wall_position = Vec3::new(0.371, -0.51, 0.06);
         children.spawn()
         .insert(Collider::cuboid(0.01,0.5, 0.05))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(right_wall_position.x, right_wall_position.y, right_wall_position.z)));

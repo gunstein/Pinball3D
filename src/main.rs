@@ -1,4 +1,3 @@
-use bevy::core::Zeroable;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
@@ -59,10 +58,32 @@ fn setup(
         ..Default::default()
     }); 
     */
+
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            intensity: 1000.0,
+            shadows_enabled: false,
+            ..default()
+        },
+        transform: Transform::from_xyz(-2.0, 0.0, 5.0),
+        ..default()
+    });    
+    
+
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            intensity: 1000.0,
+            shadows_enabled: false,
+            ..default()
+        },
+        transform: Transform::from_xyz(2.0, 0.0, 5.0),
+        ..default()
+    });        
+
     commands
     .spawn_bundle(Camera3dBundle{
         //transform: Transform::from_xyz(-1.0, 0.5, 0.1).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Z),
-        transform: Transform::from_xyz(0.0, -0.9, 1.8).looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z),//ok
+        transform: Transform::from_xyz(0.0, -0.8, 1.8).looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z),//ok
         //transform: Transform::from_xyz(0.0, -0.5, 1.0).looking_at(Vec3::new(0.0, -0.2, 0.0), Vec3::Z),
         //transform: Transform::from_xyz(0.1, -0.5, 0.5).looking_at(Vec3::new(0.1, -0.5, 0.0), Vec3::Y),
         //transform: Transform::from_xyz(-0.5, 1.0, 2.0).looking_at(Vec3::new(-0.5, 1.0, 0.0), Vec3::Y),
@@ -70,9 +91,4 @@ fn setup(
         //transform: Transform::from_xyz(0.0, -0.8, 0.011).looking_at(Vec3::new(0.0, -0.2, 0.011), Vec3::Z),
         ..default()
     });
-    /* 
-    .insert(UiCameraConfig {
-        show_ui: false,
-        ..default()
-    });*/
 }

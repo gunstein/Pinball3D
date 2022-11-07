@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-//
 use super::Pinball3DSystems;
 use super::BottomWall;
 
@@ -32,8 +31,7 @@ fn spawn_ball(
         subdivisions: 3,
     };*/
 
-    let entity_id = commands.spawn()
-
+    commands.spawn()
     .insert_bundle(PbrBundle {
     //mesh: meshes.add(Mesh::from(shape_ball)),
         mesh: meshes.add(Mesh::from(shape::UVSphere{
@@ -48,15 +46,8 @@ fn spawn_ball(
     .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
     //.insert(Collider::ball(0.01))
-    .insert(Collider::ball(0.012))
+    .insert(Collider::ball(0.015))
     .insert_bundle(TransformBundle::from(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z)))
-    //.insert(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z))
-    //.insert(Transform::from_xyz(-0.1, 0.2, 0.3));
-    /* .insert(ExternalForce {
-        //force: Vec3::new(0.0, 0.0, 0.0),
-        force: Vec3::new(0.0, 0.0007, 0.0),
-        torque: Vec3::new(0.0, 0.0, 0.0),
-    })*/
     .insert(ExternalForce {
         force: Vec3::new(0.0, 0.0, 0.0),
         //force: Vec3::new(0.0, 0.0000007, 0.0),
@@ -67,10 +58,7 @@ fn spawn_ball(
         angvel: Vec3::new(0.0, 0.0, 0.0),
     })
     .insert(ActiveEvents::COLLISION_EVENTS)
-    //.insert(ColliderMassProperties::Density(100.0))
     .insert(Restitution::coefficient(0.6))
-    //.insert(CollisionGroups::new(0b0001, 0b0100));
-    //.insert(CollisionGroups::new(0b0100, 0b0011))
     .insert(CollisionGroups{memberships:Group::GROUP_3, filters:(Group::GROUP_1 | Group::GROUP_2)})
     .insert(Ball);
 }
