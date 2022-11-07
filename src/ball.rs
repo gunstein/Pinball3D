@@ -33,22 +33,22 @@ fn spawn_ball(
     };*/
 
     let entity_id = commands.spawn()
-    /* 
-     .insert_bundle(PbrBundle {
-        //mesh: meshes.add(Mesh::from(shape_ball)),
+
+    .insert_bundle(PbrBundle {
+    //mesh: meshes.add(Mesh::from(shape_ball)),
         mesh: meshes.add(Mesh::from(shape::UVSphere{
             radius: 0.015,
             ..default()
         })),
-        material: materials.add(Color::rgb(2.5, 2.7, 2.8).into()),
-        //..Default::default()
-        ..default()
-    })*/
+        material: materials.add(Color::ORANGE_RED.into()
+    ),
+    ..default()
+    })
     .insert(RigidBody::Dynamic)
     .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
     //.insert(Collider::ball(0.01))
-    .insert(Collider::ball(0.01))
+    .insert(Collider::ball(0.012))
     .insert_bundle(TransformBundle::from(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z)))
     //.insert(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z))
     //.insert(Transform::from_xyz(-0.1, 0.2, 0.3));

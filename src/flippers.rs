@@ -44,10 +44,10 @@ fn spawn_flippers(
     }
     let left_flipper_mesh_handle:Handle<Mesh> = asset_server.load("left_flipper.glb#Mesh0/Primitive0");
   
-    let material = materials.add(Color::rgb(2.0, 0.9, 2.0).into());
+    let material = materials.add(Color::YELLOW.into());
 
-    let left_flipper_position = Vec3::new(-0.1, -0.5, 0.01);
-    let right_flipper_position = Vec3::new(0.1, -0.5, 0.01);
+    let left_flipper_position = Vec3::new(-0.1, -0.8, 0.01);
+    let right_flipper_position = Vec3::new(0.1, -0.8, 0.01);
 
 
     let collider_big_cylinder = Collider::round_cylinder(0.02, 0.016, 0.001);
@@ -67,11 +67,11 @@ fn spawn_flippers(
     let rotation_lower_box = Quat::from_rotation_z(0.12); 
 
     let left_flipper = commands.spawn()
-    /* .insert_bundle(PbrBundle {
+    .insert_bundle(PbrBundle {
         mesh: left_flipper_mesh_handle.clone(),
         material: material.clone(),
         ..default()
-    })*/ 
+    })
     .insert(RigidBody::KinematicPositionBased)
     .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
@@ -88,11 +88,11 @@ fn spawn_flippers(
     commands.entity(floor_entity.unwrap()).add_child(left_flipper);
 
     let right_flipper = commands.spawn()
-    /* .insert_bundle(PbrBundle {
+    .insert_bundle(PbrBundle {
         mesh: left_flipper_mesh_handle.clone(),
         material: material.clone(),
         ..default()
-    }) */
+    })
     .insert(RigidBody::KinematicPositionBased)
     .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
