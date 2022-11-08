@@ -24,8 +24,6 @@ fn spawn_walls(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    //let material = materials.add(Color::rgb(2.0, 0.9, 2.0).into());
-
     //Floor
     let floor_handle:Handle<Mesh> = asset_server.load("floor.glb#Mesh0/Primitive0");
     let floor_position = Vec3::new(0.0, 0.0, 0.0);
@@ -92,13 +90,13 @@ fn spawn_walls(
         .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, -0.01, 0.05)));
         
         //Collider left wall
-        let left_wall_position = Vec3::new(-0.371, -0.51, 0.06);
+        let left_wall_position = Vec3::new(-0.37, -0.51, 0.06);
         children.spawn()
         .insert(Collider::cuboid(0.01,0.5, 0.05))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(left_wall_position.x, left_wall_position.y, left_wall_position.z)));
         
         //Collider right wall
-        let right_wall_position = Vec3::new(0.371, -0.51, 0.06);
+        let right_wall_position = Vec3::new(0.37, -0.51, 0.06);
         children.spawn()
         .insert(Collider::cuboid(0.01,0.5, 0.05))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(right_wall_position.x, right_wall_position.y, right_wall_position.z)));
@@ -139,8 +137,8 @@ fn spawn_walls(
     .id();
     
     //Right flipper wall
-    let right_flipper_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.16*2.0, 0.05*2.0)));
-    let right_flipper_wall_position = Vec3::new(0.24, -0.69, 0.06);
+    let right_flipper_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.1*2.0, 0.05*2.0)));
+    let right_flipper_wall_position = Vec3::new(0.2, -0.74, 0.06);
     
     let right_flipper_wall = commands.spawn()
     .insert_bundle(PbrBundle {
@@ -149,19 +147,57 @@ fn spawn_walls(
         ..default()
     })
     .insert(RigidBody::Fixed)
-    .insert(Collider::cuboid(0.01,0.16, 0.05))
+    .insert(Collider::cuboid(0.01,0.1, 0.05))
     .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
     .insert_bundle(TransformBundle::from(
         Transform{
             translation: Vec3::new(right_flipper_wall_position.x, right_flipper_wall_position.y, right_flipper_wall_position.z),
-            rotation: Quat::from_rotation_z(-0.92),
+            rotation: Quat::from_rotation_z(-1.1),
             ..default()
         }
     ))
     .id();
     
+    //Launcher wall
+    let launcher_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.28*2.0, 0.05*2.0)));
+    let launcher_wall_position = Vec3::new(0.3, -0.71, 0.06);
+    
+    let launcher_wall = commands.spawn()
+    .insert_bundle(PbrBundle {
+        mesh: launcher_wall_mesh_handle.clone(),
+        material: material_flipper_wall.clone(),
+        ..default()
+    })
+    .insert(RigidBody::Fixed)
+    .with_children(|children| {
+        children.spawn()
+        .insert(Collider::cuboid(0.01,0.28, 0.05));
+
+        //small cylinder on top of wall to avoid ball getting stuck.
+        children.spawn()
+        .insert(Collider::cylinder(0.05,0.01))
+        .insert_bundle(
+            TransformBundle::from(
+                Transform{
+                    translation: Vec3::new(0.0, 0.28, 0.0),
+                    rotation: Quat::from_rotation_x(std::f32::consts::PI/2.0),
+                    ..default()
+                }
+            )
+        );
+    })
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
+    .insert_bundle(TransformBundle::from(
+        Transform{
+            translation: Vec3::new(launcher_wall_position.x, launcher_wall_position.y, launcher_wall_position.z),
+            //rotation: Quat::from_rotation_z(-0.92),
+            ..default()
+        }
+    ))
+    .id();
+
     //Add all walls as children to floor
-    commands.entity(floor).push_children(&[outer_wall, left_flipper_wall, right_flipper_wall]);
+    commands.entity(floor).push_children(&[outer_wall, left_flipper_wall, right_flipper_wall, launcher_wall]);
     //commands.entity(floor).push_children(&[outer_wall]);
     
 }
