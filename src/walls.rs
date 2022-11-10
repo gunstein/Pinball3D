@@ -161,11 +161,12 @@ fn spawn_walls(
     //Launcher wall
     let launcher_wall_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.28*2.0, 0.05*2.0)));
     let launcher_wall_position = Vec3::new(0.3, -0.71, 0.06);
+    let material_launcher_wall = materials.add(Color::rgba(0.0, 1.0, 1.0, 0.5).into()); //Cyan
     
     let launcher_wall = commands.spawn()
     .insert_bundle(PbrBundle {
         mesh: launcher_wall_mesh_handle.clone(),
-        material: material_flipper_wall.clone(),
+        material: material_launcher_wall.clone(),
         ..default()
     })
     .insert(RigidBody::Fixed)

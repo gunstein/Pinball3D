@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use super::Pinball3DSystems;
 use super::BottomWall;
 
 pub struct BallPlugin;
@@ -9,7 +8,7 @@ pub struct BallPlugin;
 impl Plugin for BallPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system(spawn_ball.after(Pinball3DSystems::Main))
+            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_ball)
             .add_system(push_ball_to_floor)
             .add_system(handle_ball_intersections_with_bottom_wall);
     }
@@ -21,10 +20,10 @@ struct Ball;
 fn spawn_ball(    
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<StandardMaterial>>
 )
 {
-    let ball_pos = Vec3::new(0.3, 0.0, 0.03);
+    let ball_pos = Vec3::new(0.34, -0.83, 0.02);
 
     /*let shape_ball = bevy::prelude::shape::Icosphere {
         radius: 0.01,
@@ -104,7 +103,7 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
 
                 //ball_force.force = Vec3::new(0.0, -0.00007, 0.0).into();
                 //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
-                //info!("push_ball_to_floor 3");
+                info!("push_ball_to_floor 3");
             }
             else{
                 //ball_force.force = Vec3::new(0.0, 0.0, 0.0).into();
@@ -119,7 +118,7 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
                 //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
                 //ball_velocity.angvel = Vec3::new(0.0, 0.0, 0.0);
                 //ball_velocity.linvel = Vec3::new(0.0, 0.0, 0.0);
-                //info!("push_ball_to_floor 4");
+                info!("push_ball_to_floor 4");
             }
         }
         /* 

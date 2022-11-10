@@ -10,6 +10,9 @@ use flippers::*;
 mod ball;
 use ball::*;
 
+mod launcher;
+use launcher::*;
+
 mod utils;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
@@ -34,8 +37,9 @@ fn main() {
         .add_plugin(WallsPlugin)
         .add_plugin(FlippersPlugin)
         .add_plugin(BallPlugin)
+        .add_plugin(LauncherPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierDebugRenderPlugin::default())
+        //.add_plugin(RapierDebugRenderPlugin::default())
         .add_startup_system(setup.label(Pinball3DSystems::Main))
         .run();
 }

@@ -30,17 +30,15 @@ fn spawn_flippers(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    //query_floors: Query<Entity, With<Floor>>
-    //query_floors: Query<(Entity, &Floor)>
     query_floors: Query<Entity, With<Floor>>
 ) {
     //info!("Spawn flippers start");
-    let mut floor_entity = None;
+    let mut floor = None;
     //for floor in query_floors.iter(){
     for entity in query_floors.iter(){
         //info!("Spawn flippers, floor is found.");
         //floor_entity = Some(floor);
-        floor_entity = Some(entity);
+        floor = Some(entity);
     }
     let left_flipper_mesh_handle:Handle<Mesh> = asset_server.load("left_flipper.glb#Mesh0/Primitive0");
   
@@ -85,7 +83,7 @@ fn spawn_flippers(
     .insert(LeftFlipper{curr_angle:0.0})
     .id(); 
 
-    commands.entity(floor_entity.unwrap()).add_child(left_flipper);
+    commands.entity(floor.unwrap()).add_child(left_flipper);
 
     let right_flipper = commands.spawn()
     .insert_bundle(PbrBundle {
@@ -113,7 +111,7 @@ fn spawn_flippers(
     .insert(RightFlipper{curr_angle:0.0})
     .id();
     
-    commands.entity(floor_entity.unwrap()).add_child(right_flipper);
+    commands.entity(floor.unwrap()).add_child(right_flipper);
 }
 
 
@@ -130,7 +128,7 @@ fn left_flipper_movement(
         if keyboard_input.pressed(KeyCode::Left)
         {
             //change_angle = 0.09;
-            change_angle = 0.18;
+            change_angle = 0.3;
         }
         else
         {
@@ -161,7 +159,7 @@ fn right_flipper_movement(
         if keyboard_input.pressed(KeyCode::Right)
         {
             //change_angle = -0.09;
-            change_angle = -0.18;
+            change_angle = -0.3;
         }
         else
         {
