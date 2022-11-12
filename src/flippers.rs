@@ -46,7 +46,7 @@ fn spawn_flippers(
 
     let left_flipper_position = Vec3::new(-0.1, -0.8, 0.01);
     let right_flipper_position = Vec3::new(0.1, -0.8, 0.01);
-    let flipper_half_height = 0.02;
+    let flipper_half_height = 0.03;
 
     let collider_big_cylinder = Collider::round_cylinder(flipper_half_height, 0.016, 0.001);
     let position_big_cylinder = Vec3::new(0.0, 0.0, flipper_half_height);

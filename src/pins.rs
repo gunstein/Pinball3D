@@ -28,9 +28,9 @@ fn spawn_pins(
 )
 {
     let pins_pos : [Vec3;3] = [
-        Vec3::new(-0.1, 0.0, 0.06),
-        Vec3::new(0.1, 0.0, 0.06),
-        Vec3::new(0.0,  -0.1, 0.06),
+        Vec3::new(-0.1, 0.0, 0.05),
+        Vec3::new(0.1, 0.0, 0.05),
+        Vec3::new(0.0,  -0.1, 0.05),
     ];
 
     for i in 0..pins_pos.len() {
@@ -55,15 +55,13 @@ fn spawn_single_pin(
         floor = Some(entity);
     }
 
-    //let pin_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.01*2.0,0.14*2.0, 0.05*2.0)));
-    let pin_radius = 0.05;
+    let pin_radius = 0.03;
+    let pin_depth = 0.05;
     let pin_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Capsule {
-        depth: 0.1,
+        depth: pin_depth,
         radius: pin_radius,
         ..default()
     }));
-    let material_pin = materials.add(Color::CYAN.into());
-
 
     let temp_timestamp_last_hit = timestamp_last_hit.unwrap_or(0.0);
 
@@ -72,6 +70,8 @@ fn spawn_single_pin(
         color = Color::TEAL;
     }
 
+    let material_pin = materials.add(color.into());
+
     let pin = commands.spawn()
     .insert_bundle(PbrBundle {
         mesh: pin_mesh_handle.clone(),
@@ -79,7 +79,8 @@ fn spawn_single_pin(
         ..default()
     })
     .insert(RigidBody::Fixed)
-    .insert(Collider::ball(pin_radius))
+    //.insert(Collider::ball(pin_radius))
+    .insert(Collider::round_cylinder(pin_depth, pin_radius, 0.001))
     .insert_bundle(TransformBundle::from(
         Transform{
             translation: Vec3::new(position.x, position.y, position.z),
