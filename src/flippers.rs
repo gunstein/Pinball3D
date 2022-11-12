@@ -46,22 +46,22 @@ fn spawn_flippers(
 
     let left_flipper_position = Vec3::new(-0.1, -0.8, 0.01);
     let right_flipper_position = Vec3::new(0.1, -0.8, 0.01);
+    let flipper_half_height = 0.02;
 
-
-    let collider_big_cylinder = Collider::round_cylinder(0.02, 0.016, 0.001);
-    let position_big_cylinder = Vec3::new(0.0, 0.0, 0.02);
+    let collider_big_cylinder = Collider::round_cylinder(flipper_half_height, 0.016, 0.001);
+    let position_big_cylinder = Vec3::new(0.0, 0.0, flipper_half_height);
     let rotation_big_cylinder = Quat::from_rotation_x(std::f32::consts::PI/2.0);
 
-    let collider_small_cylinder = Collider::round_cylinder(0.02, 0.007, 0.002);
-    let position_small_cylinder = Vec3::new(0.07, 0.0, 0.02);
+    let collider_small_cylinder = Collider::round_cylinder(flipper_half_height, 0.007, 0.002);
+    let position_small_cylinder = Vec3::new(0.07, 0.0, flipper_half_height);
     let rotation_small_cylinder = Quat::from_rotation_x(std::f32::consts::PI/2.0);
 
-    let collider_upper_box = Collider::round_cuboid(0.035, 0.004, 0.02, 0.002);
-    let position_upper_box = Vec3::new(0.035, 0.008, 0.02);
+    let collider_upper_box = Collider::round_cuboid(0.035, 0.004, flipper_half_height, 0.002);
+    let position_upper_box = Vec3::new(0.035, 0.008, flipper_half_height);
     let rotation_upper_box = Quat::from_rotation_z(-0.12);
     
     let collider_lower_box = collider_upper_box.clone();
-    let position_lower_box = Vec3::new(0.035, -0.008, 0.02);
+    let position_lower_box = Vec3::new(0.035, -0.008, flipper_half_height);
     let rotation_lower_box = Quat::from_rotation_z(0.12); 
 
     let left_flipper = commands.spawn()

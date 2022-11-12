@@ -13,7 +13,9 @@ use ball::*;
 mod launcher;
 use launcher::*;
 
-mod utils;
+mod pins;
+use pins::*;
+
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum Pinball3DSystems {
@@ -38,8 +40,9 @@ fn main() {
         .add_plugin(FlippersPlugin)
         .add_plugin(BallPlugin)
         .add_plugin(LauncherPlugin)
+        .add_plugin(PinsPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        //.add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(RapierDebugRenderPlugin::default())
         .add_startup_system(setup.label(Pinball3DSystems::Main))
         .run();
 }

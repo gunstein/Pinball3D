@@ -23,7 +23,7 @@ fn spawn_ball(
     mut materials: ResMut<Assets<StandardMaterial>>
 )
 {
-    let ball_pos = Vec3::new(0.34, -0.83, 0.02);
+    let ball_pos = Vec3::new(0.32, -0.83, -0.05);
 
     /*let shape_ball = bevy::prelude::shape::Icosphere {
         radius: 0.01,
@@ -99,11 +99,11 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
                 //ball_force.force = Vec3::new(0.0, 0.0, -0.00007).into();
                 //ball_force.force = Vec3::new(0.0, -0.00007, -0.00007).into();
                 
-                ball_force.force = Vec3::new(0.0, 0.0, -0.00007);
+                ball_force.force = Vec3::new(0.0, 0.0, -0.00008);
 
                 //ball_force.force = Vec3::new(0.0, -0.00007, 0.0).into();
                 //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
-                info!("push_ball_to_floor 3");
+                //info!("push_ball_to_floor 3");
             }
             else{
                 //ball_force.force = Vec3::new(0.0, 0.0, 0.0).into();
@@ -118,7 +118,7 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
                 //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
                 //ball_velocity.angvel = Vec3::new(0.0, 0.0, 0.0);
                 //ball_velocity.linvel = Vec3::new(0.0, 0.0, 0.0);
-                info!("push_ball_to_floor 4");
+                //info!("push_ball_to_floor 4");
             }
         }
         /* 
