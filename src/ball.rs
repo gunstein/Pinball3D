@@ -15,7 +15,7 @@ impl Plugin for BallPlugin {
 }
 
 #[derive(Component)]
-struct Ball;
+pub struct Ball;
 
 fn spawn_ball(    
     mut commands: Commands,
@@ -52,6 +52,11 @@ fn spawn_ball(
         //force: Vec3::new(0.0, 0.0000007, 0.0),
         torque: Vec3::new(0.0, 0.0, 0.0),
     })
+    .insert(ExternalImpulse{
+        impulse: Vec3::new(0.0, 0.0, 0.0),
+        //force: Vec3::new(0.0, 0.0000007, 0.0),
+        torque_impulse: Vec3::new(0.0, 0.0, 0.0),
+    })    
     .insert(Velocity {
         linvel: Vec3::new(0.0, 0.0, 0.0),
         angvel: Vec3::new(0.0, 0.0, 0.0),
@@ -133,6 +138,60 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
  
 }
 
+/* 
+fn display_events(
+    mut collision_events: EventReader<CollisionEvent>,
+) {
+    for collision_event in collision_events.iter() {
+        println!("Received collision event: {:?}", collision_event);
+    }
+
+}
+*/
+/* 
+fn display_events(
+    mut collision_events: EventReader<CollisionEvent>,
+    query_ball: Query<Entity, With<Ball>>,
+    query_bottom_wall: Query<Entity, With<BottomWall>>,
+) {
+    for collision in collision_events.iter() {
+        //println!("Received collision event: {:?}", collision_event);
+        match *collision {
+            CollisionEvent::Started(e1, e2, _) => {
+                //if let Ok([c1, c2]) = cards.get_many_mut([e1, e2]) {
+                if let Ok([c1, c2]) = [e1, e2] {
+                    // stack cards here
+                }
+            }
+            CollisionEvent::Stopped(e1, e2, _) => {
+                if let Ok([c1, c2]) = cards.get_many_mut([e1, e2]) {
+                    // unstack cards here
+                }
+            }
+        }
+    }
+
+}
+*/
+
+/* 
+fn collide_cards(mut collisions: EventReader<CollisionEvent>, mut cards: Query<&mut Card>) {
+    for collision in collisions.iter() {
+        match *collision {
+            CollisionEvent::Started(e1, e2, _) => {
+                if let Ok([c1, c2]) = cards.get_many_mut([e1, e2]) {
+                    // stack cards here
+                }
+            }
+            CollisionEvent::Stopped(e1, e2, _) => {
+                if let Ok([c1, c2]) = cards.get_many_mut([e1, e2]) {
+                    // unstack cards here
+                }
+            }
+        }
+    }
+}
+*/
 fn handle_ball_intersections_with_bottom_wall(
     rapier_context: Res<RapierContext>,
     query_ball: Query<Entity, With<Ball>>,
