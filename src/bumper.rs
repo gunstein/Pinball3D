@@ -12,9 +12,9 @@ pub struct BumperPlugin;
 impl Plugin for BumperPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_bumpers);
-            //.add_system(handle_pin_events)
-            //.add_system(respawn_pin_to_toggle_color);
+            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_bumpers)
+            .add_system(handle_bumper_events)
+            .add_system(respawn_bumper_to_toggle_color);
     }
 }
 
@@ -32,8 +32,8 @@ struct Rotation(Quat);
 
 
 struct InitBumper{
-    position: Vec3,
-    rotation: Quat,
+    position: Position,
+    rotation: Rotation,
 }
 
 fn spawn_bumpers(    
@@ -45,22 +45,23 @@ fn spawn_bumpers(
 {
     let init_bumpers : [InitBumper;1] = [
         InitBumper{
-            position: Vec3::new(-0.2, -0.65, 0.0),
-            rotation: Quat::from_rotation_z(1.1)
+            position: Position(Vec3::new(-0.2, -0.65, 0.0)),
+            rotation: Rotation(Quat::from_rotation_z(1.1))
         }
     ];
 
     for i in 0..init_bumpers.len() {
         let init_bumper = &init_bumpers[i];
 
-        spawn_single_bumper(&mut commands, init_bumper, None, &mut meshes, &mut materials, &query_floors);
+        spawn_single_bumper(&mut commands, &init_bumper.position, &init_bumper.rotation, None, &mut meshes, &mut materials, &query_floors);
     }
 }
 
 
 fn spawn_single_bumper(    
     commands: &mut Commands,
-    init_bumper: & InitBumper,
+    position: & Position,
+    rotation: & Rotation,
     timestamp_last_hit: Option<f64>,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
@@ -101,17 +102,70 @@ fn spawn_single_bumper(
     .insert(Collider::round_cylinder(bumper_depth / 2.0, bumper_radius, 0.002))
     .insert_bundle(TransformBundle::from(
         Transform{
-            translation: Vec3::new(init_bumper.position.x, init_bumper.position.y, init_bumper.position.z + floor_half_height),
-            rotation: init_bumper.rotation,
+            translation: Vec3::new(position.0.x, position.0.y, position.0.z + floor_half_height),
+            rotation: rotation.0,
             ..default()
         }
     ))
     .insert(Restitution::coefficient(0.7))
     .insert(Bumper)
-    .insert(Position(init_bumper.position))
-    .insert(Rotation(init_bumper.rotation))
+    .insert(Position(position.0))
+    .insert(Rotation(rotation.0))
     .insert(TimestampLastHit(temp_timestamp_last_hit))
     .id();
 
     commands.entity(floor.unwrap()).add_child(bumper);
+}
+
+fn respawn_bumper_to_toggle_color(mut query_bumpers: Query<(Entity, &Position, &Rotation, &TimestampLastHit), With<Bumper>>, 
+        time: Res<Time>,
+        mut commands: Commands,
+        mut meshes: ResMut<Assets<Mesh>>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
+        query_floors: Query<(Entity, &HalfHeight), With<Floor>>,
+    ) {
+    for (entity, position, rotation, timestamp_last_hit) in query_bumpers.iter_mut() {
+        let diff = time.seconds_since_startup() - timestamp_last_hit.0;
+        if timestamp_last_hit.0 > 0.0 && diff > 1.0{
+            //Color have been toggled for more than a second so respawn
+            let pos = position;
+            commands.entity(entity).despawn();
+            spawn_single_bumper(&mut commands, position, rotation, None, &mut meshes, &mut materials, &query_floors);
+        }
+    }
+}
+
+fn handle_bumper_events(
+    query_bumpers: Query<(Entity, &Position, &Rotation, &TimestampLastHit), With<Bumper>>,
+    mut query_balls: Query<(Entity, &mut ExternalImpulse, &Velocity), With<Ball>>,
+    time: Res<Time>,
+    mut contact_events: EventReader<CollisionEvent>,
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    query_floors: Query<(Entity, &HalfHeight), With<Floor>>,
+) {
+    for contact_event in contact_events.iter() {
+        for (entity, position, rotation, timestamp_last_hit) in query_bumpers.iter() {
+            if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
+                if h1 == &entity || h2 == &entity {
+                    //Respawn to change color
+                    let timestamp_last_hit = time.seconds_since_startup();
+                    commands.entity(entity).despawn();
+                    spawn_single_bumper(&mut commands, position, rotation, Some(timestamp_last_hit), &mut meshes, &mut materials, &query_floors);
+                }
+            }
+            if let CollisionEvent::Stopped(h1, h2, _event_flag) = contact_event {
+                if h1 == &entity || h2 == &entity {
+                    //Give ball a push in velocity direction
+                    for (entity_ball, mut external_impulse, velocity) in query_balls.iter_mut() {
+                        if h1 == &entity_ball || h2 == &entity_ball {
+                            let normalized_velocity = velocity.linvel.normalize();
+                            external_impulse.impulse = external_impulse.impulse.add(normalized_velocity * 0.000003);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

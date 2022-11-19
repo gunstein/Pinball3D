@@ -48,7 +48,9 @@ fn spawn_launcher(
     //Launcher gate
     //Add launcher gate, connected with joints between outer_wall and launcher_wall
     //OneWayGate
-    /*let gate_anchor_pos = Vec3::new(0.3, -0.42, 0.1);
+    let gate_anchor_pos = Vec3::new(0.3, -0.42, 0.1);
+    let launcher_gate_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(0.017*2.0,0.003*2.0, 0.04*2.0)));
+    let material_launcher_gate = materials.add(Color::RED.into());
 
     let gate_anchor = commands.spawn()
     .insert(RigidBody::Fixed)
@@ -66,7 +68,7 @@ fn spawn_launcher(
         .local_anchor1(Vec3::new(0.015, 0.0, 0.0)) //pos in local coordinates of joint
         .local_anchor2(Vec3::new(-0.017, 0.0, 0.04)); //pos in local coordinates of gate
     
-    let pivot_rotation = Quat::from_rotation_z(0.1);
+    //let pivot_rotation = Quat::from_rotation_z(0.1);
     //left_flipper_transform.rotate_around(left_flipper.point_of_rotation, pivot_rotation);
 
     //Litt rart å legge transformasjon for nedtrillingscollider her, men men...
@@ -76,6 +78,11 @@ fn spawn_launcher(
 
     let launcher_gate = 
     commands.spawn()
+    .insert_bundle(PbrBundle {
+        mesh: launcher_gate_mesh_handle.clone(),
+        material: material_launcher_gate.clone(),
+        ..default()
+    })
     .insert(RigidBody::Dynamic)
     .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
@@ -99,11 +106,10 @@ fn spawn_launcher(
         }
     ))
     .id();
-    */
 
     commands.entity(floor.unwrap())
-    .push_children(&[launcher]);
-    //.push_children(&[launcher, gate_anchor, launcher_gate]);
+    //.push_children(&[launcher]);
+    .push_children(&[launcher, gate_anchor, launcher_gate]);
 }
 
 fn launcher_movement(
@@ -115,7 +121,7 @@ fn launcher_movement(
         
         if keyboard_input.pressed(KeyCode::Space)
         {
-            next_ypos = next_ypos + 0.03;
+            next_ypos = next_ypos + 0.04;
         }
         else
         {
