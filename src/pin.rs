@@ -6,9 +6,9 @@ use bevy_rapier3d::prelude::*;
 use super::Floor;
 use super::Ball;
 
-pub struct PinsPlugin;
+pub struct PinPlugin;
 
-impl Plugin for PinsPlugin {
+impl Plugin for PinPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system_to_stage(StartupStage::PostStartup, spawn_pins)

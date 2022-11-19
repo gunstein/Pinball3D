@@ -3,15 +3,18 @@ use bevy_rapier3d::prelude::*;
 
 use super::Pinball3DSystems;
 
-pub struct WallsPlugin;
+pub struct WallPlugin;
 
 #[derive(Component)]
 pub struct Floor;
 
 #[derive(Component)]
+pub struct HalfHeight(pub f32);
+
+#[derive(Component)]
 pub struct BottomWall;
 
-impl Plugin for WallsPlugin {
+impl Plugin for WallPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system(spawn_walls.after(Pinball3DSystems::Main));
@@ -28,6 +31,7 @@ fn spawn_walls(
     let floor_handle:Handle<Mesh> = asset_server.load("floor.glb#Mesh0/Primitive0");
     let floor_position = Vec3::new(0.0, 0.0, 0.0);
     let material_floor = materials.add(Color::rgb(0.0, 0.0, 1.0).into());
+    let floor_half_height = 0.01;
 
     let floor = commands.spawn()
     .insert_bundle(PbrBundle {
@@ -38,7 +42,7 @@ fn spawn_walls(
     .insert(RigidBody::Fixed)
     .with_children(|children| {
         children.spawn()
-        .insert(Collider::cuboid(0.4, 0.7, 0.01))
+        .insert(Collider::cuboid(0.4, 0.7, floor_half_height))
         .insert_bundle(TransformBundle::from(
             Transform{
                 translation: Vec3::new(0.0, -0.3, 0.0),
@@ -56,6 +60,7 @@ fn spawn_walls(
         }
     ))
     .insert(Floor)
+    .insert(HalfHeight(floor_half_height))
     .id();
 
     //Outer wall
@@ -197,8 +202,64 @@ fn spawn_walls(
     ))
     .id();
 
+    /* 
+    //Add launcher gate, connected with joints between outer_wall and launcher_wall
+    //OneWayGate
+    let gate_anchor_pos = Vec3::new(0.3, -0.42, 0.1);
+
+    let gate_anchor = commands.spawn()
+    .insert(RigidBody::Fixed)
+    .insert_bundle(TransformBundle::from(
+        Transform{
+            translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z),
+            ..default()
+        }
+    ))
+    .id();
+
+    let joint_axis = Vec3::new(1.0, 0.0, 0.0);
+    let joint = RevoluteJointBuilder::new(joint_axis)
+        .limits([0.0, std::f32::consts::PI / 2.0])
+        .local_anchor1(Vec3::new(0.015, 0.0, 0.0)) //pos in local coordinates of joint
+        .local_anchor2(Vec3::new(-0.017, 0.0, 0.04)); //pos in local coordinates of gate
+    
+    let pivot_rotation = Quat::from_rotation_z(0.1);
+    //left_flipper_transform.rotate_around(left_flipper.point_of_rotation, pivot_rotation);
+
+    //Litt rart å legge transformasjon for nedtrillingscollider her, men men...
+    let mut transform = Transform::identity();
+    transform.rotate_around(Vec3::new(-0.017, 0.0, 0.04), Quat::from_rotation_z(0.1));
+
+
+    let launcher_gate = 
+    commands.spawn()
+    .insert(RigidBody::Dynamic)
+    .insert(Sleeping::disabled())
+    .insert(Ccd::enabled())
+    .with_children(|children| {
+        children.spawn()
+        .insert(Collider::cuboid(0.017,0.003, 0.04));
+        //children.spawn()
+        //.insert(Collider::cuboid(0.017,0.003, 0.04))
+        //.insert_bundle(TransformBundle::from(
+        //    transform
+        //));
+        children.spawn()
+        .insert(ImpulseJoint::new(gate_anchor, joint));
+    })
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
+    .insert_bundle(TransformBundle::from(
+        Transform{
+            translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z - 0.04),
+            //rotation: Quat::from_rotation_z(-0.92),
+            ..default()
+        }
+    ))
+    .id();
+    */
     //Add all walls as children to floor
-    commands.entity(floor).push_children(&[outer_wall, left_flipper_wall, right_flipper_wall, launcher_wall]);
+    commands.entity(floor).push_children(&[outer_wall, left_flipper_wall, right_flipper_wall, 
+        launcher_wall]);
     //commands.entity(floor).push_children(&[outer_wall]);
     
 }

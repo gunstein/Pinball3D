@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-mod walls;
-use walls::*;
+mod wall;
+use wall::*;
 
-mod flippers;
-use flippers::*;
+mod flipper;
+use flipper::*;
 
 mod ball;
 use ball::*;
@@ -13,8 +13,11 @@ use ball::*;
 mod launcher;
 use launcher::*;
 
-mod pins;
-use pins::*;
+mod pin;
+use pin::*;
+
+mod bumper;
+use bumper::*;
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
@@ -36,13 +39,14 @@ fn main() {
         .insert_resource(Msaa::default())
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
         .add_plugins(DefaultPlugins)
-        .add_plugin(WallsPlugin)
-        .add_plugin(FlippersPlugin)
+        .add_plugin(WallPlugin)
+        .add_plugin(FlipperPlugin)
         .add_plugin(BallPlugin)
         .add_plugin(LauncherPlugin)
-        .add_plugin(PinsPlugin)
+        .add_plugin(PinPlugin)
+        .add_plugin(BumperPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierDebugRenderPlugin::default())
+        //.add_plugin(RapierDebugRenderPlugin::default())
         .add_startup_system(setup.label(Pinball3DSystems::Main))
         .run();
 }
@@ -91,8 +95,9 @@ fn setup(
     .spawn_bundle(Camera3dBundle{
         //transform: Transform::from_xyz(-1.0, 0.5, 0.1).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Z),
         transform: Transform::from_xyz(0.0, -0.8, 1.8).looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z),//ok
-        //transform: Transform::from_xyz(0.0, -1.5, -1.3).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Z),
-        //transform: Transform::from_xyz(0.1, -0.5, 0.5).looking_at(Vec3::new(0.1, -0.5, 0.0), Vec3::Y),
+        //transform: Transform::from_xyz(0.32, -0.8, 0.1).looking_at(Vec3::new(0.32, -0.3, 0.0), Vec3::Z),
+        
+        //transform: Transform::from_xyz(0.0, -0.9, 0.8).looking_at(Vec3::new(0.0, -0.9, 0.0), Vec3::Y),
         //transform: Transform::from_xyz(-0.5, 1.0, 2.0).looking_at(Vec3::new(-0.5, 1.0, 0.0), Vec3::Y),
         //transform: Transform::from_xyz(0.0, -1.4, 0.3).looking_at(Vec3::new(0.0, -0.5, 0.1), Vec3::Z),
         //transform: Transform::from_xyz(0.0, -0.8, 0.011).looking_at(Vec3::new(0.0, -0.2, 0.011), Vec3::Z),

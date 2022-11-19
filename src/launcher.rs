@@ -44,7 +44,66 @@ fn spawn_launcher(
     .insert(Launcher{start_pos: launcher_pos})
     .id();
 
-    commands.entity(floor.unwrap()).add_child(launcher);
+
+    //Launcher gate
+    //Add launcher gate, connected with joints between outer_wall and launcher_wall
+    //OneWayGate
+    /*let gate_anchor_pos = Vec3::new(0.3, -0.42, 0.1);
+
+    let gate_anchor = commands.spawn()
+    .insert(RigidBody::Fixed)
+    .insert_bundle(TransformBundle::from(
+        Transform{
+            translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z),
+            ..default()
+        }
+    ))
+    .id();
+
+    let joint_axis = Vec3::new(1.0, 0.0, 0.0);
+    let joint = RevoluteJointBuilder::new(joint_axis)
+        .limits([0.0, std::f32::consts::PI / 2.0])
+        .local_anchor1(Vec3::new(0.015, 0.0, 0.0)) //pos in local coordinates of joint
+        .local_anchor2(Vec3::new(-0.017, 0.0, 0.04)); //pos in local coordinates of gate
+    
+    let pivot_rotation = Quat::from_rotation_z(0.1);
+    //left_flipper_transform.rotate_around(left_flipper.point_of_rotation, pivot_rotation);
+
+    //Litt rart å legge transformasjon for nedtrillingscollider her, men men...
+    //let mut transform = Transform::identity();
+    //transform.rotate_around(Vec3::new(-0.017, 0.0, 0.04), Quat::from_rotation_z(0.1));
+
+
+    let launcher_gate = 
+    commands.spawn()
+    .insert(RigidBody::Dynamic)
+    .insert(Sleeping::disabled())
+    .insert(Ccd::enabled())
+    .with_children(|children| {
+        children.spawn()
+        .insert(Collider::cuboid(0.017,0.003, 0.04));
+        /*children.spawn()
+        .insert(Collider::cuboid(0.017,0.003, 0.04))
+        .insert_bundle(TransformBundle::from(
+            transform
+        ));*/
+        children.spawn()
+        .insert(ImpulseJoint::new(gate_anchor, joint));
+    })
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
+    .insert_bundle(TransformBundle::from(
+        Transform{
+            translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z - 0.04),
+            //rotation: Quat::from_rotation_z(-0.92),
+            ..default()
+        }
+    ))
+    .id();
+    */
+
+    commands.entity(floor.unwrap())
+    .push_children(&[launcher]);
+    //.push_children(&[launcher, gate_anchor, launcher_gate]);
 }
 
 fn launcher_movement(
