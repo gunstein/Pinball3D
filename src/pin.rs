@@ -30,14 +30,23 @@ fn spawn_pins(
     query_floors: Query<Entity, With<Floor>>
 )
 {
-    let pins_pos : [Vec3;6] = [
+    let pins_pos : [Vec3;10] = [
+        Vec3::new(0.0, 0.07, 0.05),
+
         Vec3::new(-0.1, 0.0, 0.05),
         Vec3::new(0.1, 0.0, 0.05),
+
         Vec3::new(0.0,  -0.1, 0.05),
-        //test
-        Vec3::new(0.0,  0.3, 0.05),
-        Vec3::new(-0.25,  0.0, 0.05),
-        Vec3::new(0.2,  0.1, 0.05),
+
+        Vec3::new(-0.1,  -0.2, 0.05),
+        Vec3::new(0.1,  -0.2, 0.05), 
+
+        Vec3::new(0.0,  -0.3, 0.05),
+        
+        Vec3::new(-0.12,  -0.4, 0.05),
+        Vec3::new(0.12,  -0.4, 0.05),
+
+        Vec3::new(0.0,  -0.5, 0.05),
     ];
 
     for i in 0..pins_pos.len() {

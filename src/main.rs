@@ -46,7 +46,7 @@ fn main() {
         .add_plugin(PinPlugin)
         .add_plugin(BumperPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        //.add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(RapierDebugRenderPlugin::default())
         .add_startup_system(setup.label(Pinball3DSystems::Main))
         .run();
 }
@@ -56,8 +56,9 @@ fn setup(
     mut commands: Commands,
     mut rapier_config: ResMut<RapierConfiguration>,
 ) {
-    // Set gravity to x and spawn camera.
+    // Set gravity to x and spawn camera
     //rapier_config.gravity = Vec3::zeroed();
+    //rapier_config.gravity = Vec3::new(0.0, -0.3, -0.7);
     rapier_config.gravity = Vec3::new(0.0, 0.0, -1.0);
 
     // camera
@@ -97,7 +98,7 @@ fn setup(
         transform: Transform::from_xyz(0.0, -0.8, 1.8).looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z),//ok
         //transform: Transform::from_xyz(0.32, -0.8, 0.1).looking_at(Vec3::new(0.32, -0.3, 0.0), Vec3::Z),
         
-        //transform: Transform::from_xyz(0.0, -0.9, 0.8).looking_at(Vec3::new(0.0, -0.9, 0.0), Vec3::Y),
+        //transform: Transform::from_xyz(0.1, -0.7, 0.5).looking_at(Vec3::new(0.1, -0.7, 0.0), Vec3::Y),
         //transform: Transform::from_xyz(-0.5, 1.0, 2.0).looking_at(Vec3::new(-0.5, 1.0, 0.0), Vec3::Y),
         //transform: Transform::from_xyz(0.0, -1.4, 0.3).looking_at(Vec3::new(0.0, -0.5, 0.1), Vec3::Z),
         //transform: Transform::from_xyz(0.0, -0.8, 0.011).looking_at(Vec3::new(0.0, -0.2, 0.011), Vec3::Z),

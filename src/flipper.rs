@@ -144,7 +144,7 @@ fn left_flipper_movement(
         let pivot_rotation = Quat::from_rotation_z(new_clamped_angle - left_flipper.curr_angle);
         //left_flipper_transform.rotate_around(left_flipper.point_of_rotation, pivot_rotation);
         //println!("pivot_rotation {:?}", pivot_rotation );
-        left_flipper_transform.rotate(pivot_rotation);   
+        left_flipper_transform.rotate_local(pivot_rotation);   
         left_flipper.curr_angle = new_clamped_angle;     
     }
 }
@@ -175,7 +175,7 @@ fn right_flipper_movement(
         let pivot_rotation = Quat::from_rotation_z(new_clamped_angle - right_flipper.curr_angle);
         //left_flipper_transform.rotate_around(left_flipper.point_of_rotation, pivot_rotation);
         //println!("pivot_rotation {:?}", pivot_rotation );
-        right_flipper_transform.rotate(pivot_rotation);   
+        right_flipper_transform.rotate_local(pivot_rotation);   
         right_flipper.curr_angle = new_clamped_angle;     
     }
 }

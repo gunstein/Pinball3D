@@ -23,7 +23,8 @@ fn spawn_ball(
     mut materials: ResMut<Assets<StandardMaterial>>
 )
 {
-    let ball_pos = Vec3::new(0.32, -0.83, -0.05);
+    //let ball_pos = Vec3::new(0.32, -0.83, -0.05);
+    let ball_pos = Vec3::new(0.32, -0.83, 0.02);
 
     /*let shape_ball = bevy::prelude::shape::Icosphere {
         radius: 0.01,

@@ -28,8 +28,42 @@ fn spawn_walls(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     //Floor
+    //Tree in floor background 
+    let tree_texture_handle = asset_server.load("xmas_tree.png");
+    let tree_aspect = 1.8;
+
+    let tree_quad_width = 0.5;
+    let tree_quad_handle = meshes.add(Mesh::from(shape::Quad::new(Vec2::new(
+        tree_quad_width,
+        tree_quad_width * tree_aspect,
+    ))));
+
+    let tree_texture_material_handle = materials.add(StandardMaterial {
+        base_color_texture: Some(tree_texture_handle.clone()),
+        alpha_mode: AlphaMode::Blend,
+        unlit: true,
+        ..default()
+    });
+    
+    //Merry christmas in floor background 
+    let mxmas_texture_handle = asset_server.load("merry_christmas.png");
+    let mxmas_aspect = 1.8;
+
+    let mxmas_quad_width = 0.5;
+    let mxmas_quad_handle = meshes.add(Mesh::from(shape::Quad::new(Vec2::new(
+        mxmas_quad_width,
+        mxmas_quad_width * mxmas_aspect,
+    ))));
+
+    let mxmas_texture_material_handle = materials.add(StandardMaterial {
+        base_color_texture: Some(tree_texture_handle.clone()),
+        alpha_mode: AlphaMode::Blend,
+        unlit: true,
+        ..default()
+    });
+
     let floor_handle:Handle<Mesh> = asset_server.load("floor.glb#Mesh0/Primitive0");
-    let floor_position = Vec3::new(0.0, 0.0, 0.0);
+    let floor_position = Vec3::new(0.0, -0.0, 0.0);
     let material_floor = materials.add(Color::rgb(0.0, 0.0, 1.0).into());
     let floor_half_height = 0.01;
 
@@ -49,6 +83,13 @@ fn spawn_walls(
                 ..default()
             })
         );
+        children.spawn()
+        .insert_bundle((PbrBundle {
+            mesh: tree_quad_handle.clone(),
+            material: tree_texture_material_handle.clone(),
+            transform: Transform::from_xyz(0.0, -0.3, 0.01),
+            ..default()
+        }));
     })
     .insert(CollisionGroups{memberships:Group::GROUP_1, filters:Group::GROUP_3})
     .insert_bundle(TransformBundle::from(
