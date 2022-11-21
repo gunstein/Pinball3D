@@ -46,17 +46,17 @@ fn spawn_walls(
     });
     
     //Merry christmas in floor background 
-    let mxmas_texture_handle = asset_server.load("merry_christmas.png");
-    let mxmas_aspect = 1.8;
+    let mxmas_texture_handle = asset_server.load("merry_xmas.png");
+    let mxmas_aspect = 1.0;
 
-    let mxmas_quad_width = 0.5;
+    let mxmas_quad_width = 0.15;
     let mxmas_quad_handle = meshes.add(Mesh::from(shape::Quad::new(Vec2::new(
         mxmas_quad_width,
         mxmas_quad_width * mxmas_aspect,
     ))));
 
     let mxmas_texture_material_handle = materials.add(StandardMaterial {
-        base_color_texture: Some(tree_texture_handle.clone()),
+        base_color_texture: Some(mxmas_texture_handle.clone()),
         alpha_mode: AlphaMode::Blend,
         unlit: true,
         ..default()
@@ -90,6 +90,13 @@ fn spawn_walls(
             transform: Transform::from_xyz(0.0, -0.3, 0.01),
             ..default()
         }));
+        children.spawn()
+        .insert_bundle((PbrBundle {
+            mesh: mxmas_quad_handle.clone(),
+            material: mxmas_texture_material_handle.clone(),
+            transform: Transform::from_xyz(0.0, -0.9, 0.01),
+            ..default()
+        }));        
     })
     .insert(CollisionGroups{memberships:Group::GROUP_1, filters:Group::GROUP_3})
     .insert_bundle(TransformBundle::from(

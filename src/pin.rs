@@ -3,6 +3,8 @@ use std::ops::Add;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
+use rand::Rng;
+
 use super::Floor;
 use super::Ball;
 
@@ -12,16 +14,15 @@ impl Plugin for PinPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system_to_stage(StartupStage::PostStartup, spawn_pins)
-            .add_system(handle_pin_events)
-            .add_system(respawn_pin_to_toggle_color);
+            .add_system(handle_pin_events);
     }
 }
 
 #[derive(Component)]
 struct Pin{
-    timestamp_last_hit : f64,
     position : Vec3,
 }
+
 
 fn spawn_pins(    
     mut commands: Commands,
@@ -60,7 +61,7 @@ fn spawn_pins(
 fn spawn_single_pin(    
     commands: &mut Commands,
     position: Vec3,
-    timestamp_last_hit: Option<f64>,
+    color: Option<Color>,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     query_floors: & Query<Entity, With<Floor>>,
@@ -79,14 +80,13 @@ fn spawn_single_pin(
         ..default()
     }));
 
-    let temp_timestamp_last_hit = timestamp_last_hit.unwrap_or(0.0);
+ 
+    let mut chosen_color = Color::TEAL;
+    if color.is_some(){
+        chosen_color = color.unwrap();
+    } 
 
-    let mut color = Color::GREEN;
-    if temp_timestamp_last_hit == 0.0{
-        color = Color::TEAL;
-    }
-
-    let material_pin = materials.add(color.into());
+    let material_pin = materials.add(chosen_color.into());
 
     let pin = commands.spawn()
     .insert_bundle(PbrBundle {
@@ -105,69 +105,16 @@ fn spawn_single_pin(
         }
     ))
     .insert(Restitution::coefficient(0.7))
-    .insert(Pin{timestamp_last_hit: temp_timestamp_last_hit, position: position })
+    .insert(Pin{position: position })
     .id();
 
     commands.entity(floor.unwrap()).add_child(pin);
 }
 
-fn respawn_pin_to_toggle_color(mut query: Query<(Entity, &Pin), With<Pin>>, 
-        time: Res<Time>,
-        mut commands: Commands,
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut materials: ResMut<Assets<StandardMaterial>>,
-        query_floors: Query<Entity, With<Floor>>,
-    ) {
-    for (entity, pin) in query.iter_mut() {
-        let diff = time.seconds_since_startup() - pin.timestamp_last_hit;
-        if pin.timestamp_last_hit > 0.0 && diff > 1.0{
-            //Color have been toggled for more than a second so respawn
-            let pos = pin.position;
-            commands.entity(entity).despawn();
-            spawn_single_pin(&mut commands, pos, None, &mut meshes, &mut materials, &query_floors);
-        }
-    }
-}
-
-/* 
-fn display_events(
-    mut collision_events: EventReader<CollisionEvent>,
-    query_ball: Query<Entity, With<Ball>>,
-    query_pins: Query<Entity, With<Pin>>,
-) {
-    for collision in collision_events.iter() {
-        match *collision {
-            CollisionEvent::Started(e1, e2, _) => {
-                let mut ball = None;
-                if let Ok(ball_e1) = query_ball.get(e1){
-                    ball = Some(ball_e1);
-                }
-                else if let Ok(ball_e2) = query_ball.get(e2){
-                    ball = query_ball.get(e2);
-                }
-
-                if Some(ball){
-
-                }
-                if let Ok([c1, c2]) = [e1, e2] {
-                    // stack cards here
-                }
-            }
-            CollisionEvent::Stopped(e1, e2, _) => {
-                if let Ok([c1, c2]) = cards.get_many_mut([e1, e2]) {
-                    // unstack cards here
-                }
-            }
-        }
-    }
-
-}
-*/
 
 fn handle_pin_events(
     query_pins: Query<(Entity, &Pin), With<Pin>>,
     mut query_balls: Query<(Entity, &mut ExternalImpulse, &Velocity), With<Ball>>,
-    time: Res<Time>,
     mut contact_events: EventReader<CollisionEvent>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -179,10 +126,18 @@ fn handle_pin_events(
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &entity_pin || h2 == &entity_pin {
                     //Respawn to change color
+                    let color_selection : [Color; 5]= [
+                        Color::YELLOW,
+                        Color::RED,
+                        Color::BLUE,
+                        Color::GREEN,
+                        Color::PINK
+                    ];
+                    let mut rng = rand::thread_rng();
+                    let chosen_index = rng.gen_range(0..5);
                     let pos = pin.position;
-                    let timestamp_last_hit = time.seconds_since_startup();
                     commands.entity(entity_pin).despawn();
-                    spawn_single_pin(&mut commands, pos, Some(timestamp_last_hit), &mut meshes, &mut materials, &query_floors);
+                    spawn_single_pin(&mut commands, pos, Some(color_selection[chosen_index]), &mut meshes, &mut materials, &query_floors);
                 }
             }
             if let CollisionEvent::Stopped(h1, h2, _event_flag) = contact_event {
