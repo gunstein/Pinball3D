@@ -77,6 +77,10 @@ fn spawn_flippers(
     .insert(RigidBody::KinematicPositionBased)
     .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
+    .insert(Friction {
+        coefficient: 0.7,
+        combine_rule: CoefficientCombineRule::Min,
+    })
     .insert(Collider::compound(vec![
         //(position_big_cylinder, rotation_big_cylinder, collider_big_cylinder.clone()),
         (position_small_cylinder, rotation_small_cylinder, collider_small_cylinder.clone()),
@@ -98,6 +102,10 @@ fn spawn_flippers(
     .insert(RigidBody::KinematicPositionBased)
     .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
+    .insert(Friction {
+        coefficient: 0.7,
+        combine_rule: CoefficientCombineRule::Min,
+    })
     //.insert(AsyncCollider{handle: left_flipper_mesh_handle, shape: ComputedColliderShape::TriMesh})
     .insert(Collider::compound(vec![
         //(position_big_cylinder, rotation_big_cylinder, collider_big_cylinder.clone()),

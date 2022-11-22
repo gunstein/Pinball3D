@@ -1,14 +1,18 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
+use std::ops::Add;
+
 use super::Floor;
+use super::Ball;
 pub struct LauncherPlugin;
 
 impl Plugin for LauncherPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_launcher)
-            .add_system(launcher_movement);
+            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_launcher_and_gate)
+            .add_system(launcher_movement)
+            .add_system(handle_gate_sensor_events);
     }
 }
 
@@ -17,7 +21,10 @@ struct Launcher{
     start_pos : Vec3,
  }
 
-fn spawn_launcher(
+ #[derive(Component)]
+ struct GateSensor;
+
+fn spawn_launcher_and_gate(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -107,9 +114,18 @@ fn spawn_launcher(
     ))
     .id();
 
+    //Sensor above gate. Used to push stuck ball.
+    let gate_sensor_position = Vec3::new(0.33, -0.41, 0.01);
+    let gate_sensor = commands.spawn()
+    .insert(Collider::cuboid(0.02, 0.02, 0.02))
+    .insert(Sensor)
+    .insert_bundle(TransformBundle::from(Transform::from_xyz(gate_sensor_position.x, gate_sensor_position.y, gate_sensor_position.z)))
+    .insert(GateSensor)
+    .id(); 
+
     commands.entity(floor.unwrap())
     //.push_children(&[launcher]);
-    .push_children(&[launcher, gate_anchor, launcher_gate]);
+    .push_children(&[launcher, gate_anchor, launcher_gate, gate_sensor]);
 }
 
 fn launcher_movement(
@@ -129,5 +145,32 @@ fn launcher_movement(
         }   
         let clamped_ypos = next_ypos.clamp(launcher.start_pos.y, launcher.start_pos.y +  0.05);
         launcher_transform.translation.y = clamped_ypos;    
+    }
+}
+
+fn handle_gate_sensor_events(
+    query_gate_sensors: Query<Entity, With<GateSensor>>,
+    mut query_balls: Query<(Entity, &mut ExternalImpulse, &Velocity), With<Ball>>,
+    mut contact_events: EventReader<CollisionEvent>,
+    mut commands: Commands,
+) {
+    for contact_event in contact_events.iter() {
+        for sensor_entity in query_gate_sensors.iter() {
+            if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
+                if h1 == &sensor_entity || h2 == &sensor_entity {
+                    //If absolutvalue of velocity in x is close to zero, ball can get stuck so apply force in x-direction.
+                    //Find right ball
+                    for (entity_ball, mut external_impulse, velocity) in query_balls.iter_mut() {
+                        if h1 == &entity_ball || h2 == &entity_ball {
+                            if velocity.linvel.x.abs() < 0.1{
+                                //info!("handle_gate_sensor_events 1");
+                                let force_to_add = Vec3::new(-0.0000008, 0.0, 0.0);
+                                external_impulse.impulse = external_impulse.impulse.add(force_to_add);
+                            } 
+                        }
+                    }
+                }
+            }
+        }
     }
 }

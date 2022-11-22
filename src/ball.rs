@@ -45,6 +45,10 @@ fn spawn_ball(
     .insert(RigidBody::Dynamic)
     .insert(Sleeping::disabled())
     .insert(Ccd::enabled())
+    .insert(Friction {
+        coefficient: 0.1,
+        combine_rule: CoefficientCombineRule::Min,
+    })
     //.insert(Collider::ball(0.01))
     .insert(Collider::ball(0.015))
     .insert_bundle(TransformBundle::from(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z)))
@@ -105,7 +109,7 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
                 //ball_force.force = Vec3::new(0.0, 0.0, -0.00007).into();
                 //ball_force.force = Vec3::new(0.0, -0.00007, -0.00007).into();
                 
-                ball_force.force = Vec3::new(0.0, 0.0, -0.00008);
+                ball_force.force = Vec3::new(0.0, 0.0, -0.0001);
 
                 //ball_force.force = Vec3::new(0.0, -0.00007, 0.0).into();
                 //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
