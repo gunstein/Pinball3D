@@ -250,64 +250,62 @@ fn spawn_walls(
     ))
     .id();
 
-    /* 
-    //Add launcher gate, connected with joints between outer_wall and launcher_wall
-    //OneWayGate
-    let gate_anchor_pos = Vec3::new(0.3, -0.42, 0.1);
-
-    let gate_anchor = commands.spawn()
+    //Starramp_collider
+    let starramp_position = Vec3::new(-0.11, 0.12, 0.02);
+    
+    let starramp = commands.spawn()
     .insert(RigidBody::Fixed)
+    .insert(Collider::cuboid(0.08,0.05, 0.03))
+    .insert(CollisionGroups{memberships:Group::GROUP_1, filters:Group::GROUP_3})
     .insert_bundle(TransformBundle::from(
         Transform{
-            translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z),
+            translation: Vec3::new(starramp_position.x, starramp_position.y, starramp_position.z),
+            rotation: Quat::from_rotation_z(std::f32::consts::PI/4.0) * Quat::from_rotation_y(-std::f32::consts::PI/6.0),
             ..default()
         }
     ))
     .id();
 
-    let joint_axis = Vec3::new(1.0, 0.0, 0.0);
-    let joint = RevoluteJointBuilder::new(joint_axis)
-        .limits([0.0, std::f32::consts::PI / 2.0])
-        .local_anchor1(Vec3::new(0.015, 0.0, 0.0)) //pos in local coordinates of joint
-        .local_anchor2(Vec3::new(-0.017, 0.0, 0.04)); //pos in local coordinates of gate
-    
-    let pivot_rotation = Quat::from_rotation_z(0.1);
-    //left_flipper_transform.rotate_around(left_flipper.point_of_rotation, pivot_rotation);
+    //rail
+    /* 
+    let mut heights_rail = Vec::new();
+    let radius_rail : f32 = 0.36;
+    let radius_rail_squared: f32 = radius_rail * radius_rail;
+    let num_cols_rail = 21;
+    let x_min = 0.0;
+    let x_max = radius * f32::cos(std::f32::consts::PI/4.0);
+    //println!("x_max {:?}", x_max);
+    let step_size_rail = (x_max - x_min) / (num_cols_rail as f32 -1.0);
+    for step in 0..num_cols_rail{
+        let x = x_min + (step as f32 * step_size_rail);
+        let y = f32::sqrt(radius_rail_squared - (x*x));
+        heights_rail.push(y);
+        heights_rail.push(y + 0.01);
+        heights_rail.push(y);
+    }
 
-    //Litt rart å legge transformasjon for nedtrillingscollider her, men men...
-    let mut transform = Transform::identity();
-    transform.rotate_around(Vec3::new(-0.017, 0.0, 0.04), Quat::from_rotation_z(0.1));
+    //println!("heights_rail {:?}", heights_rail);
 
-
-    let launcher_gate = 
-    commands.spawn()
-    .insert(RigidBody::Dynamic)
-    .insert(Sleeping::disabled())
-    .insert(Ccd::enabled())
+    let rail = commands.spawn()
+    .insert(RigidBody::Fixed)
     .with_children(|children| {
+        //Collider rail
         children.spawn()
-        .insert(Collider::cuboid(0.017,0.003, 0.04));
-        //children.spawn()
-        //.insert(Collider::cuboid(0.017,0.003, 0.04))
-        //.insert_bundle(TransformBundle::from(
-        //    transform
-        //));
-        children.spawn()
-        .insert(ImpulseJoint::new(gate_anchor, joint));
+        .insert(Collider::heightfield(heights_rail, 3, num_cols_rail, Vec3::new(x_max, 1.0, 0.1)))
+        .insert_bundle(TransformBundle::from(
+            //Transform::from_xyz(0.32, -0.5, 0.3)
+            Transform{
+                translation: Vec3::new(0.0, -0.6, 0.4),
+                rotation: Quat::from_rotation_y(-std::f32::consts::PI/4.0),
+                ..default()
+            }
+        ));
     })
-    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
-    .insert_bundle(TransformBundle::from(
-        Transform{
-            translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z - 0.04),
-            //rotation: Quat::from_rotation_z(-0.92),
-            ..default()
-        }
-    ))
     .id();
     */
     //Add all walls as children to floor
     commands.entity(floor).push_children(&[outer_wall, left_flipper_wall, right_flipper_wall, 
-        launcher_wall]);
+        launcher_wall, starramp]);
     //commands.entity(floor).push_children(&[outer_wall]);
     
 }

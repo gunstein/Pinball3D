@@ -19,6 +19,8 @@ use pin::*;
 mod bumper;
 use bumper::*;
 
+mod target;
+use target::*;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum Pinball3DSystems {
@@ -45,6 +47,7 @@ fn main() {
         .add_plugin(LauncherPlugin)
         .add_plugin(PinPlugin)
         .add_plugin(BumperPlugin)
+        .add_plugin(TargetPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_startup_system(setup.label(Pinball3DSystems::Main))
@@ -60,6 +63,11 @@ fn setup(
     //rapier_config.gravity = Vec3::zeroed();
     //rapier_config.gravity = Vec3::new(0.0, -0.3, -0.7);
     rapier_config.gravity = Vec3::new(0.0, 0.0, -1.0);
+    rapier_config.timestep_mode = TimestepMode::Variable {
+        max_dt: 1.0 / 60.0,
+        time_scale: 1.0,
+        substeps: 2,
+    };
 
     // camera
     /* 

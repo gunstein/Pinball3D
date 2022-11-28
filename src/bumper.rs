@@ -53,14 +53,14 @@ fn spawn_bumpers(
 {
     let init_bumpers : [BumperBundle;6] = [
         BumperBundle{
-            position: Position(Vec3::new(-0.2, -0.65, 0.0)),
-            rotation: Rotation(Quat::from_rotation_z(-0.44)),
+            position: Position(Vec3::new(-0.2, -0.66, 0.0)),
+            rotation: Rotation(Quat::from_rotation_z(-0.6)),
             dark_color: DarkColor(Color::RED),
             light_color: LightColor(Color::GOLD)
         },
         BumperBundle{
             position: Position(Vec3::new(-0.28, -0.53, 0.0)),
-            rotation: Rotation(Quat::from_rotation_z( std::f32::consts::PI/2.0 + 0.1)),
+            rotation: Rotation(Quat::from_rotation_z( std::f32::consts::PI/2.0 + 0.12)),
             dark_color: DarkColor(Color::RED),
             light_color: LightColor(Color::GOLD)
         },
@@ -83,7 +83,7 @@ fn spawn_bumpers(
             light_color: LightColor(Color::ANTIQUE_WHITE)
         },
         BumperBundle{
-            position: Position(Vec3::new(-0.05, 0.17, 0.0)),
+            position: Position(Vec3::new(-0.05, 0.17, -0.03)),
             rotation: Rotation(Quat::from_rotation_z(std::f32::consts::PI - 1.0)),
             dark_color: DarkColor(Color::YELLOW),
             light_color: LightColor(Color::ANTIQUE_WHITE)

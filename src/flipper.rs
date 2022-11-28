@@ -87,6 +87,7 @@ fn spawn_flippers(
         (position_upper_box, rotation_upper_box, collider_upper_box.clone()),
         //(position_lower_box, rotation_lower_box, collider_lower_box.clone())
     ]))
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
     .insert_bundle(TransformBundle::from(Transform::from_xyz(left_flipper_position.x, left_flipper_position.y, left_flipper_position.z)))
     .insert(LeftFlipper{curr_angle:0.0})
     .id(); 
@@ -120,6 +121,7 @@ fn spawn_flippers(
             ..default()
         }
     ))
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
     .insert(RightFlipper{curr_angle:0.0})
     .id();
     

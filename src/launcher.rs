@@ -46,12 +46,15 @@ fn spawn_launcher_and_gate(
         ..default()
     })
     .insert(RigidBody::KinematicPositionBased)
+    .insert(Sleeping::disabled())
+    .insert(Ccd::enabled())
     .insert(Collider::cuboid(0.02, 0.02, 0.02))
+    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
     .insert_bundle(TransformBundle::from(Transform::from_xyz(launcher_pos.x, launcher_pos.y, launcher_pos.z)))
     .insert(Launcher{start_pos: launcher_pos})
     .id();
 
-
+    /* 
     //Launcher gate
     //Add launcher gate, connected with joints between outer_wall and launcher_wall
     //OneWayGate
@@ -96,11 +99,11 @@ fn spawn_launcher_and_gate(
     .with_children(|children| {
         children.spawn()
         .insert(Collider::cuboid(0.017,0.003, 0.04));
-        /*children.spawn()
-        .insert(Collider::cuboid(0.017,0.003, 0.04))
-        .insert_bundle(TransformBundle::from(
-            transform
-        ));*/
+        //children.spawn()
+        //.insert(Collider::cuboid(0.017,0.003, 0.04))
+        //.insert_bundle(TransformBundle::from(
+        //    transform
+        //));
         children.spawn()
         .insert(ImpulseJoint::new(gate_anchor, joint));
     })
@@ -113,11 +116,27 @@ fn spawn_launcher_and_gate(
         }
     ))
     .id();
+    */
 
-    //Sensor above gate. Used to push stuck ball.
-    let gate_sensor_position = Vec3::new(0.33, -0.41, 0.01);
+    //one way gate collider, used to prevent stuck ball.
+    let gate_collider_pos = Vec3::new(0.33, -0.4, 0.05);
+    let gate_collider = commands.spawn()
+    .insert(RigidBody::Fixed)
+    .insert(Collider::cuboid(0.03,0.003, 0.04))
+    .insert(CollisionGroups{memberships:Group::GROUP_4, filters:Group::GROUP_3})
+    .insert_bundle(TransformBundle::from(
+        Transform{
+            translation: Vec3::new(gate_collider_pos.x, gate_collider_pos.y, gate_collider_pos.z ),
+            rotation: Quat::from_rotation_z(0.1),
+            ..default()
+        }
+    ))
+    .id();
+    
+    //Sensor above gate. Used to change collider group of ball
+    let gate_sensor_position = Vec3::new(0.33, -0.38, 0.05);
     let gate_sensor = commands.spawn()
-    .insert(Collider::cuboid(0.02, 0.02, 0.02))
+    .insert(Collider::cuboid(0.03, 0.003, 0.04))
     .insert(Sensor)
     .insert_bundle(TransformBundle::from(Transform::from_xyz(gate_sensor_position.x, gate_sensor_position.y, gate_sensor_position.z)))
     .insert(GateSensor)
@@ -125,7 +144,8 @@ fn spawn_launcher_and_gate(
 
     commands.entity(floor.unwrap())
     //.push_children(&[launcher]);
-    .push_children(&[launcher, gate_anchor, launcher_gate, gate_sensor]);
+    //.push_children(&[launcher, gate_anchor, launcher_gate, gate_sensor, gate_collider]);
+    .push_children(&[launcher, gate_sensor, gate_collider]);
 }
 
 fn launcher_movement(
@@ -137,20 +157,20 @@ fn launcher_movement(
         
         if keyboard_input.pressed(KeyCode::Space)
         {
-            next_ypos = next_ypos + 0.04;
+            next_ypos = next_ypos + 0.03;
         }
         else
         {
             next_ypos = next_ypos - 0.02;
         }   
-        let clamped_ypos = next_ypos.clamp(launcher.start_pos.y, launcher.start_pos.y +  0.05);
+        let clamped_ypos = next_ypos.clamp(launcher.start_pos.y, launcher.start_pos.y +  0.06);
         launcher_transform.translation.y = clamped_ypos;    
     }
 }
 
 fn handle_gate_sensor_events(
     query_gate_sensors: Query<Entity, With<GateSensor>>,
-    mut query_balls: Query<(Entity, &mut ExternalImpulse, &Velocity), With<Ball>>,
+    mut query_balls: Query<(Entity, &mut CollisionGroups), With<Ball>>,
     mut contact_events: EventReader<CollisionEvent>,
     mut commands: Commands,
 ) {
@@ -160,13 +180,14 @@ fn handle_gate_sensor_events(
                 if h1 == &sensor_entity || h2 == &sensor_entity {
                     //If absolutvalue of velocity in x is close to zero, ball can get stuck so apply force in x-direction.
                     //Find right ball
-                    for (entity_ball, mut external_impulse, velocity) in query_balls.iter_mut() {
+                    for (entity_ball, mut collision_group) in query_balls.iter_mut() {
                         if h1 == &entity_ball || h2 == &entity_ball {
-                            if velocity.linvel.x.abs() < 0.1{
+                            //if velocity.linvel.x.abs() < 0.1{
                                 //info!("handle_gate_sensor_events 1");
-                                let force_to_add = Vec3::new(-0.0000008, 0.0, 0.0);
-                                external_impulse.impulse = external_impulse.impulse.add(force_to_add);
-                            } 
+                                //let force_to_add = Vec3::new(-0.0000008, 0.0, 0.0);
+                                //external_impulse.impulse = external_impulse.impulse.add(force_to_add);
+                            //} 
+                            collision_group.filters = Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_4;
                         }
                     }
                 }
