@@ -98,7 +98,7 @@ pub fn spawn_single_ball(
     })
     .insert(ActiveEvents::COLLISION_EVENTS)
     .insert(Restitution::coefficient(0.6))
-    .insert(CollisionGroups{memberships:Group::GROUP_3, filters:(Group::GROUP_1 | Group::GROUP_2)})
+    .insert(CollisionGroups{memberships:Group::GROUP_3, filters:(Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3)})
     .insert(MaterialColor(material_color.0))
     .insert(Ball);
 }

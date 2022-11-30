@@ -187,7 +187,7 @@ fn handle_gate_sensor_events(
                                 //external_impulse.impulse = external_impulse.impulse.add(force_to_add);
                             //} 
                             //Add GROUP_4 to filters. This will activate collision between the ball and the one way gate collider
-                            collision_group.filters = Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_4;
+                            collision_group.filters = Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3 | Group::GROUP_4;
                         }
                     }
                 }

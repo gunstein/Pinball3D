@@ -250,12 +250,22 @@ fn spawn_walls(
     ))
     .id();
 
-    //Starramp_collider
+    //Starramp
+    let starramp_height = 0.06;
+    let starramp_length = 0.16;
+    let starramp_width = 0.1;
     let starramp_position = Vec3::new(-0.11, 0.12, 0.02);
-    
+    let starramp_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(starramp_length, starramp_width, starramp_height)));
+    let starramp_material = materials.add(Color::rgba(1.0, 1.0, 0.0, 0.5).into());
+
     let starramp = commands.spawn()
+    .insert_bundle(PbrBundle {
+        mesh: starramp_mesh_handle.clone(),
+        material: starramp_material.clone(),
+        ..default()
+    })
     .insert(RigidBody::Fixed)
-    .insert(Collider::cuboid(0.08,0.05, 0.03))
+    .insert(Collider::cuboid(starramp_length/2.0, starramp_width/2.0, starramp_height / 2.0))
     .insert(CollisionGroups{memberships:Group::GROUP_1, filters:Group::GROUP_3})
     .insert_bundle(TransformBundle::from(
         Transform{

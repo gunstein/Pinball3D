@@ -42,15 +42,14 @@ fn spawn_target(
 
     let target_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(target_length, target_width, target_height)));
 
-    //let material_target = materials.add(Color::YELLOW.into());
-
+    let material_target = materials.add(Color::VIOLET.into());
 
     let target = commands.spawn()
-    //.insert_bundle(PbrBundle {
-    //    mesh: bumper_mesh_handle.clone(),
-    //    material: material_target.clone(),
-    //    ..default()
-    //})
+    .insert_bundle(PbrBundle {
+        mesh: target_mesh_handle.clone(),
+        material: material_target.clone(),
+        ..default()
+    })
     .insert(RigidBody::Fixed)
     .insert(Collider::cuboid(target_length / 2.0, target_width / 2.0, target_height / 2.0))
     .insert_bundle(TransformBundle::from(

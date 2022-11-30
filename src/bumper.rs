@@ -8,7 +8,6 @@ use super::Floor;
 use super::Ball;
 use super::HalfHeight;
 use super::spawn_single_ball;
-use super::common;
 use super::ball;
 
 pub struct BumperPlugin;
@@ -113,7 +112,7 @@ fn spawn_bumpers(
             &init_bumper.dark_color, &init_bumper.light_color, &mut meshes, &mut materials, &query_floors);
     }
 
-    //spawn star_ball_sensor. Used to detect balls arriving in star and spawn new ball in launcher.
+    //spawn star_ball_sensor. Used to detect balls arriving in xmas star and spawn new ball in launcher.
     let mut floor = None;
     let mut floor_half_height = 0.0;
     for (entity, half_height) in query_floors.iter(){
@@ -278,7 +277,7 @@ fn handle_star_ball_sensor_events(
                     let color_selection : [Color; 5]= [
                         Color::YELLOW,
                         Color::ORANGE,
-                        Color::PURPLE,
+                        Color::YELLOW_GREEN,
                         Color::GREEN,
                         Color::PINK
                     ];
