@@ -103,7 +103,6 @@ fn spawn_walls(
         Transform{
             translation: Vec3::new(floor_position.x, floor_position.y, floor_position.z),
             rotation: Quat::from_rotation_x(0.12),
-            //rotation: Quat::from_rotation_x(3.9),
             ..default()
         }
     ))

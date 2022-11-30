@@ -64,7 +64,7 @@ fn setup(
     // Set gravity to x and spawn camera
     //rapier_config.gravity = Vec3::zeroed();
     //rapier_config.gravity = Vec3::new(0.0, -0.3, -0.7);
-    rapier_config.gravity = Vec3::new(0.0, 0.0, -1.0);
+    rapier_config.gravity = Vec3::new(0.0, -0.3, -1.0);
     rapier_config.timestep_mode = TimestepMode::Variable {
         max_dt: 1.0 / 60.0,
         time_scale: 1.0,
