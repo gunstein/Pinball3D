@@ -54,7 +54,6 @@ fn spawn_launcher_and_gate(
     .insert(Launcher{start_pos: launcher_pos})
     .id();
 
-    /* 
     //Launcher gate
     //Add launcher gate, connected with joints between outer_wall and launcher_wall
     //OneWayGate
@@ -98,7 +97,8 @@ fn spawn_launcher_and_gate(
     .insert(Ccd::enabled())
     .with_children(|children| {
         children.spawn()
-        .insert(Collider::cuboid(0.017,0.003, 0.04));
+        .insert(Collider::cuboid(0.017,0.003, 0.04))
+        .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3});
         //children.spawn()
         //.insert(Collider::cuboid(0.017,0.003, 0.04))
         //.insert_bundle(TransformBundle::from(
@@ -107,7 +107,7 @@ fn spawn_launcher_and_gate(
         children.spawn()
         .insert(ImpulseJoint::new(gate_anchor, joint));
     })
-    .insert(CollisionGroups{memberships:Group::GROUP_2, filters:Group::GROUP_3})
+    //.insert(CollisionGroups{memberships:Group::GROUP_6, filters:Group::GROUP_8})
     .insert_bundle(TransformBundle::from(
         Transform{
             translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z - 0.04),
@@ -116,7 +116,6 @@ fn spawn_launcher_and_gate(
         }
     ))
     .id();
-    */
 
     //one way gate collider, used to prevent stuck ball.
     let gate_collider_pos = Vec3::new(0.33, -0.4, 0.05);
@@ -145,7 +144,7 @@ fn spawn_launcher_and_gate(
     commands.entity(floor.unwrap())
     //.push_children(&[launcher]);
     //.push_children(&[launcher, gate_anchor, launcher_gate, gate_sensor, gate_collider]);
-    .push_children(&[launcher, gate_sensor, gate_collider]);
+    .push_children(&[launcher, gate_anchor, launcher_gate, gate_sensor, gate_collider]);
 }
 
 fn launcher_movement(
@@ -172,7 +171,7 @@ fn handle_gate_sensor_events(
     query_gate_sensors: Query<Entity, With<GateSensor>>,
     mut query_balls: Query<(Entity, &mut CollisionGroups), With<Ball>>,
     mut contact_events: EventReader<CollisionEvent>,
-    mut commands: Commands,
+    //mut commands: Commands,
 ) {
     for contact_event in contact_events.iter() {
         for sensor_entity in query_gate_sensors.iter() {
@@ -187,6 +186,7 @@ fn handle_gate_sensor_events(
                                 //let force_to_add = Vec3::new(-0.0000008, 0.0, 0.0);
                                 //external_impulse.impulse = external_impulse.impulse.add(force_to_add);
                             //} 
+                            //Add GROUP_4 to filters. This will activate collision between the ball and the one way gate collider
                             collision_group.filters = Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_4;
                         }
                     }

@@ -3,12 +3,14 @@ use bevy_rapier3d::prelude::*;
 
 use super::BottomWall;
 
+use super::common;
+
 pub struct BallPlugin;
 
 impl Plugin for BallPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_ball)
+            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_balls)
             .add_system(push_ball_to_floor)
             .add_system(handle_ball_intersections_with_bottom_wall);
     }
@@ -17,28 +19,56 @@ impl Plugin for BallPlugin {
 #[derive(Component)]
 pub struct Ball;
 
-fn spawn_ball(    
+//#[derive(Default, Component)]
+//struct Position(Vec3);
+
+#[derive(Default, Component)]
+pub struct MaterialColor(pub Color);
+
+struct InitBallBundle{
+    position: Vec3,
+    material_color: MaterialColor
+}
+
+pub const INIT_BALL_POSITION:Vec3 = Vec3::new(0.32, -0.83, 0.02);
+
+fn spawn_balls(    
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>
 )
 {
-    //let ball_pos = Vec3::new(0.32, -0.83, -0.05);
-    let ball_pos = Vec3::new(0.32, -0.83, 0.02);
+    let init_balls : [InitBallBundle;1] = [
+        InitBallBundle{
+            //position: Position(Vec3::new(0.32, -0.83, 0.02)),
+            position: INIT_BALL_POSITION,
+            material_color: MaterialColor(Color::ORANGE_RED),
+        }
+    ];
 
-    /*let shape_ball = bevy::prelude::shape::Icosphere {
-        radius: 0.01,
-        subdivisions: 3,
-    };*/
+    for i in 0..init_balls.len() {
+        let init_ball = &init_balls[i];
 
+        spawn_single_ball(&mut commands, &mut meshes, &mut materials, &init_ball.position, &init_ball.material_color);
+    }
+}
+
+
+pub fn spawn_single_ball(    
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    position: &Vec3,
+    material_color: &MaterialColor,
+)
+{
     commands.spawn()
     .insert_bundle(PbrBundle {
-    //mesh: meshes.add(Mesh::from(shape_ball)),
         mesh: meshes.add(Mesh::from(shape::UVSphere{
             radius: 0.015,
             ..default()
         })),
-        material: materials.add(Color::ORANGE_RED.into()
+        material: materials.add(material_color.0.into()
     ),
     ..default()
     })
@@ -51,7 +81,7 @@ fn spawn_ball(
     })
     //.insert(Collider::ball(0.01))
     .insert(Collider::ball(0.015))
-    .insert_bundle(TransformBundle::from(Transform::from_xyz(ball_pos.x, ball_pos.y, ball_pos.z)))
+    .insert_bundle(TransformBundle::from(Transform::from_xyz(position.x, position.y, position.z)))
     .insert(ExternalForce {
         force: Vec3::new(0.0, 0.0, 0.0),
         //force: Vec3::new(0.0, 0.0000007, 0.0),
@@ -69,9 +99,9 @@ fn spawn_ball(
     .insert(ActiveEvents::COLLISION_EVENTS)
     .insert(Restitution::coefficient(0.6))
     .insert(CollisionGroups{memberships:Group::GROUP_3, filters:(Group::GROUP_1 | Group::GROUP_2)})
+    .insert(MaterialColor(material_color.0))
     .insert(Ball);
 }
-
 
 fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity, &Transform, &Collider), With<Ball>>, rapier_context: Res<RapierContext>) {
     //info!("push_ball_to_floor 0");
@@ -143,82 +173,30 @@ fn push_ball_to_floor(mut query_balls: Query<(&mut ExternalForce, &mut Velocity,
  
 }
 
-/* 
-fn display_events(
-    mut collision_events: EventReader<CollisionEvent>,
-) {
-    for collision_event in collision_events.iter() {
-        println!("Received collision event: {:?}", collision_event);
-    }
-
-}
-*/
-/* 
-fn display_events(
-    mut collision_events: EventReader<CollisionEvent>,
-    query_ball: Query<Entity, With<Ball>>,
-    query_bottom_wall: Query<Entity, With<BottomWall>>,
-) {
-    for collision in collision_events.iter() {
-        //println!("Received collision event: {:?}", collision_event);
-        match *collision {
-            CollisionEvent::Started(e1, e2, _) => {
-                //if let Ok([c1, c2]) = cards.get_many_mut([e1, e2]) {
-                if let Ok([c1, c2]) = [e1, e2] {
-                    // stack cards here
-                }
-            }
-            CollisionEvent::Stopped(e1, e2, _) => {
-                if let Ok([c1, c2]) = cards.get_many_mut([e1, e2]) {
-                    // unstack cards here
-                }
-            }
-        }
-    }
-
-}
-*/
-
-/* 
-fn collide_cards(mut collisions: EventReader<CollisionEvent>, mut cards: Query<&mut Card>) {
-    for collision in collisions.iter() {
-        match *collision {
-            CollisionEvent::Started(e1, e2, _) => {
-                if let Ok([c1, c2]) = cards.get_many_mut([e1, e2]) {
-                    // stack cards here
-                }
-            }
-            CollisionEvent::Stopped(e1, e2, _) => {
-                if let Ok([c1, c2]) = cards.get_many_mut([e1, e2]) {
-                    // unstack cards here
-                }
-            }
-        }
-    }
-}
-*/
 fn handle_ball_intersections_with_bottom_wall(
     rapier_context: Res<RapierContext>,
-    query_ball: Query<Entity, With<Ball>>,
+    query_ball: Query<(Entity, &MaterialColor), With<Ball>>,
     query_bottom_wall: Query<Entity, With<BottomWall>>,
     mut commands: Commands,
-    meshes: ResMut<Assets<Mesh>>,
-    materials: ResMut<Assets<StandardMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut should_spawn_ball = false;
+    //let mut should_spawn_ball = false;
 
     for entity_bottom_wall in query_bottom_wall.iter() {
-        for entity_ball in query_ball.iter() {
+        for (entity_ball, material_color) in query_ball.iter() {
             /* Find the intersection pair, if it exists, between two colliders. */
             if rapier_context.intersection_pair(entity_bottom_wall, entity_ball) == Some(true) {
                 commands.entity(entity_ball).despawn();
-                should_spawn_ball = true;
+                //spawn_single_ball(commands, meshes, materials);
+                //info!("spawn new ball.");
+                spawn_single_ball(&mut commands, &mut meshes, &mut materials, &INIT_BALL_POSITION, &material_color);
             }
         }
     }
 
-    if should_spawn_ball
-    {
-        spawn_ball(commands, meshes, materials);
-    }
+    //if should_spawn_ball
+    //{
+    //    spawn_ball(commands, meshes, materials);
+    //}
 }

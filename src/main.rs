@@ -22,6 +22,8 @@ use bumper::*;
 mod target;
 use target::*;
 
+mod common;
+
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum Pinball3DSystems {
     Main,
