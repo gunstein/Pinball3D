@@ -19,6 +19,9 @@ use pin::*;
 mod bumper;
 use bumper::*;
 
+mod star;
+use star::*;
+
 mod target;
 use target::*;
 
@@ -49,6 +52,7 @@ fn main() {
         .add_plugin(LauncherPlugin)
         .add_plugin(PinPlugin)
         .add_plugin(BumperPlugin)
+        .add_plugin(StarPlugin)
         .add_plugin(TargetPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierDebugRenderPlugin::default())

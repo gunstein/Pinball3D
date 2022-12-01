@@ -2,13 +2,12 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use std::ops::Add;
-use rand::Rng;
 
 use super::Floor;
 use super::Ball;
 use super::HalfHeight;
-use super::spawn_single_ball;
-use super::ball;
+
+use super::common;
 
 pub struct BumperPlugin;
 
@@ -17,8 +16,7 @@ impl Plugin for BumperPlugin {
         app
             .add_startup_system_to_stage(StartupStage::PostStartup, spawn_bumpers)
             .add_system(handle_bumper_events)
-            .add_system(change_bumper_to_dark_color)
-            .add_system(handle_star_ball_sensor_events);
+            .add_system(change_bumper_to_dark_color);
     }
 }
 
@@ -26,37 +24,23 @@ impl Plugin for BumperPlugin {
 struct Bumper;
 
 #[derive(Default, Component)]
-struct TimestampLastHit(f64);
+pub struct TimestampLastHit(f64);
 
 #[derive(Default, Component)]
-struct Position(Vec3);
+pub struct DarkColor(pub Color);
 
 #[derive(Default, Component)]
-struct Rotation(Quat);
-
-#[derive(Default, Component)]
-struct DarkColor(Color);
-
-#[derive(Default, Component)]
-struct LightColor(Color);
+pub struct LightColor(pub Color);
 
 #[derive(Default, Component)]
 struct StarBallSensor;
 
-/* 
-#[derive(Default, Component)]
-struct DarkMaterial(Handle<StandardMaterial>);
-
-#[derive(Default, Component)]
-struct LightMaterial(Handle<StandardMaterial>);
-*/
-
 #[derive(Bundle, Default)]
-struct BumperBundle{
-    position: Position,
-    rotation: Rotation,
-    dark_color: DarkColor,
-    light_color: LightColor,
+pub struct BumperBundle{
+    pub position: common::Position,
+    pub rotation: common::Rotation,
+    pub dark_color: DarkColor,
+    pub light_color: LightColor,
 }
 
 fn spawn_bumpers(    
@@ -66,43 +50,19 @@ fn spawn_bumpers(
     query_floors: Query<(Entity, &HalfHeight), With<Floor>>
 )
 {
-    let init_bumpers : [BumperBundle;6] = [
+    let init_bumpers : [BumperBundle;2] = [
         BumperBundle{
-            position: Position(Vec3::new(-0.2, -0.66, 0.0)),
-            rotation: Rotation(Quat::from_rotation_z(-0.6)),
+            position: common::Position(Vec3::new(-0.2, -0.66, 0.0)),
+            rotation: common::Rotation(Quat::from_rotation_z(-0.6)),
             dark_color: DarkColor(Color::RED),
             light_color: LightColor(Color::GOLD)
         },
         BumperBundle{
-            position: Position(Vec3::new(-0.28, -0.53, 0.0)),
-            rotation: Rotation(Quat::from_rotation_z( std::f32::consts::PI/2.0 + 0.12)),
+            position: common::Position(Vec3::new(-0.28, -0.53, 0.0)),
+            rotation: common::Rotation(Quat::from_rotation_z( std::f32::consts::PI/2.0 + 0.12)),
             dark_color: DarkColor(Color::RED),
             light_color: LightColor(Color::GOLD)
-        },
-        BumperBundle{
-            position: Position(Vec3::new(-0.05, 0.3, 0.0)),
-            rotation: Rotation(Quat::from_rotation_z(1.0)),
-            dark_color: DarkColor(Color::YELLOW),
-            light_color: LightColor(Color::ANTIQUE_WHITE)
-        },  
-        BumperBundle{
-            position: Position(Vec3::new(0.05, 0.3, 0.0)),
-            rotation: Rotation(Quat::from_rotation_z(std::f32::consts::PI - 1.0)),
-            dark_color: DarkColor(Color::YELLOW),
-            light_color: LightColor(Color::ANTIQUE_WHITE)
-        },  
-        BumperBundle{
-            position: Position(Vec3::new(0.05, 0.17, 0.0)),
-            rotation: Rotation(Quat::from_rotation_z(1.0)),
-            dark_color: DarkColor(Color::YELLOW),
-            light_color: LightColor(Color::ANTIQUE_WHITE)
-        },
-        BumperBundle{
-            position: Position(Vec3::new(-0.05, 0.17, -0.03)),
-            rotation: Rotation(Quat::from_rotation_z(std::f32::consts::PI - 1.0)),
-            dark_color: DarkColor(Color::YELLOW),
-            light_color: LightColor(Color::ANTIQUE_WHITE)
-        },                
+        }           
     ];
 
     for i in 0..init_bumpers.len() {
@@ -111,38 +71,13 @@ fn spawn_bumpers(
         spawn_single_bumper(&mut commands, &init_bumper.position, &init_bumper.rotation, None, 
             &init_bumper.dark_color, &init_bumper.light_color, &mut meshes, &mut materials, &query_floors);
     }
-
-    //spawn star_ball_sensor. Used to detect balls arriving in xmas star and spawn new ball in launcher.
-    let mut floor = None;
-    let mut floor_half_height = 0.0;
-    for (entity, half_height) in query_floors.iter(){
-        floor = Some(entity);
-        floor_half_height = half_height.0;
-    }
-
-    let star_ball_sensor_position = Vec3::new(0.0, 0.22, floor_half_height + 0.09);
-    let star_ball_sensor = commands.spawn()
-    .insert(Collider::cuboid(0.06, 0.06, 0.01))
-    .insert(Sensor)
-    .insert_bundle(TransformBundle::from(
-        Transform{
-            translation: Vec3::new(star_ball_sensor_position.x, star_ball_sensor_position.y, star_ball_sensor_position.z),
-            rotation: Quat::from_rotation_z(std::f32::consts::PI/4.5),
-            ..default()
-        }
-    ))
-    //.insert_bundle(TransformBundle::from(Transform::from_xyz(star_ball_sensor_position.x, star_ball_sensor_position.y, star_ball_sensor_position.z)))
-    .insert(StarBallSensor)
-    .id(); 
-
-    commands.entity(floor.unwrap()).add_child(star_ball_sensor);
 }
 
 
-fn spawn_single_bumper(    
+pub fn spawn_single_bumper(    
     commands: &mut Commands,
-    position: & Position,
-    rotation: & Rotation,
+    position: & common::Position,
+    rotation: & common::Rotation,
     timestamp_last_hit: Option<f64>,
     dark_color: &DarkColor,
     light_color: &LightColor,
@@ -189,8 +124,8 @@ fn spawn_single_bumper(
     ))
     .insert(Restitution::coefficient(0.7))
     .insert(Bumper)
-    .insert(Position(position.0))
-    .insert(Rotation(rotation.0))
+    .insert(common::Position(position.0))
+    .insert(common::Rotation(rotation.0))
     .insert(TimestampLastHit(temp_timestamp_last_hit))
     .insert(DarkColor(dark_color.0))
     .insert(LightColor(light_color.0))
@@ -253,37 +188,6 @@ fn handle_bumper_events(
                             external_impulse.impulse = external_impulse.impulse.add(normalized_velocity * 0.000003);
                         }
                     }
-                }
-            }
-        }
-    }
-}
-
-
-fn handle_star_ball_sensor_events(
-    query_star_ball_sensors: Query<Entity, With<StarBallSensor>>,
-    //mut query_balls: Query<(Entity, &mut CollisionGroups), With<Ball>>,
-    //query_ball: Query<Entity, With<Ball>>,
-    mut contact_events: EventReader<CollisionEvent>,
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    for contact_event in contact_events.iter() {
-        for sensor_entity in query_star_ball_sensors.iter() {
-            if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
-                if h1 == &sensor_entity || h2 == &sensor_entity {
-                    //spawn new ball
-                    let color_selection : [Color; 5]= [
-                        Color::YELLOW,
-                        Color::ORANGE,
-                        Color::YELLOW_GREEN,
-                        Color::GREEN,
-                        Color::PINK
-                    ];
-                    let mut rng = rand::thread_rng();
-                    let chosen_index = rng.gen_range(0..5);
-                    spawn_single_ball(&mut commands, &mut meshes, &mut materials, &ball::INIT_BALL_POSITION, &ball::MaterialColor(color_selection[chosen_index].into()));
                 }
             }
         }
