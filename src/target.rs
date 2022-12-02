@@ -79,7 +79,7 @@ fn handle_target_events(
                     for (entity_ball, mut external_impulse, mut velocity) in query_balls.iter_mut() {
                         if h1 == &entity_ball || h2 == &entity_ball {
                             velocity.linvel = Vec3::new(0.0, 0.0, 0.0);
-                            external_impulse.impulse = external_impulse.impulse.add(Vec3::new(1.0, 1.0, 0.0) * 0.00001);
+                            external_impulse.impulse = external_impulse.impulse.add(Vec3::new(1.0, 1.0, 0.0) * 0.000013);
                         }
                     }
                 }

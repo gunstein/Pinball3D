@@ -249,31 +249,6 @@ fn spawn_walls(
     ))
     .id();
 
-    //Starramp
-    let starramp_height = 0.06;
-    let starramp_length = 0.16;
-    let starramp_width = 0.1;
-    let starramp_position = Vec3::new(-0.11, 0.12, 0.02);
-    let starramp_mesh_handle:Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(starramp_length, starramp_width, starramp_height)));
-    let starramp_material = materials.add(Color::rgba(1.0, 1.0, 0.0, 0.5).into());
-
-    let starramp = commands.spawn()
-    .insert_bundle(PbrBundle {
-        mesh: starramp_mesh_handle.clone(),
-        material: starramp_material.clone(),
-        ..default()
-    })
-    .insert(RigidBody::Fixed)
-    .insert(Collider::cuboid(starramp_length/2.0, starramp_width/2.0, starramp_height / 2.0))
-    .insert(CollisionGroups{memberships:Group::GROUP_1, filters:Group::GROUP_3})
-    .insert_bundle(TransformBundle::from(
-        Transform{
-            translation: Vec3::new(starramp_position.x, starramp_position.y, starramp_position.z),
-            rotation: Quat::from_rotation_z(std::f32::consts::PI/4.0) * Quat::from_rotation_y(-std::f32::consts::PI/6.0),
-            ..default()
-        }
-    ))
-    .id();
 
     //rail
     /* 
@@ -314,7 +289,7 @@ fn spawn_walls(
     */
     //Add all walls as children to floor
     commands.entity(floor).push_children(&[outer_wall, left_flipper_wall, right_flipper_wall, 
-        launcher_wall, starramp]);
+        launcher_wall]);
     //commands.entity(floor).push_children(&[outer_wall]);
     
 }
