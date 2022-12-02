@@ -135,7 +135,7 @@ fn spawn_star(
     let oneway_collector_lid = commands.spawn()
     .insert(RigidBody::Fixed)
     .insert(Collider::cuboid(0.07,0.07, 0.001))
-    .insert(CollisionGroups{memberships:Group::GROUP_4, filters:Group::GROUP_3})
+    .insert(CollisionGroups{memberships:Group::GROUP_5, filters:Group::GROUP_3})
     .insert_bundle(TransformBundle::from(
         Transform{
             translation: Vec3::new(collector_collider_position.x, collector_collider_position.y, collector_collider_position.z + 0.06),
@@ -153,7 +153,7 @@ fn spawn_star(
     .insert(Collider::cuboid(0.07,0.07, 0.001))
     .insert_bundle(TransformBundle::from(
         Transform{
-            translation: Vec3::new(collector_collider_position.x, collector_collider_position.y, collector_collider_position.z + 0.05),
+            translation: Vec3::new(collector_collider_position.x, collector_collider_position.y, collector_collider_position.z + 0.03),
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             ..default()
         }
@@ -211,24 +211,31 @@ fn handle_star_ball_sensor_events(
         for sensor_entity in query_collector_sensors.iter() {
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &sensor_entity || h2 == &sensor_entity {
+                    let mut group5_added = false;
                     for (entity_ball, mut collision_group) in query_balls.iter_mut() {
                         if h1 == &entity_ball || h2 == &entity_ball {
-                            //Add GROUP_4 to filters. This will activate collision between the ball and the one way gate collider
-                            collision_group.filters = Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3 | Group::GROUP_4;
+                            //Add GROUP_5 to filters. This will activate collision between the ball and the one way gate collider
+                            if (collision_group.filters & Group::GROUP_5) == Group::NONE{
+                                collision_group.filters = Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3 | Group::GROUP_4 | Group::GROUP_5;
+                                group5_added = true;
+                            }
+                            
                         }
                     }
-                    //spawn new ball
-                    let color_selection : [Color; 5]= [
-                        Color::YELLOW,
-                        Color::ORANGE,
-                        Color::YELLOW_GREEN,
-                        Color::GREEN,
-                        Color::PINK
-                    ];
-                    let mut rng = rand::thread_rng();
-                    let chosen_index = rng.gen_range(0..5);
-                    spawn_single_ball(&mut commands, &mut meshes, &mut materials, &ball::INIT_BALL_POSITION, &ball::MaterialColor(color_selection[chosen_index].into()));
-                }
+                    if group5_added{
+                        //spawn new ball
+                        let color_selection : [Color; 5]= [
+                            Color::YELLOW,
+                            Color::ORANGE,
+                            Color::YELLOW_GREEN,
+                            Color::GREEN,
+                            Color::PINK
+                        ];
+                        let mut rng = rand::thread_rng();
+                        let chosen_index = rng.gen_range(0..5);
+                        spawn_single_ball(&mut commands, &mut meshes, &mut materials, &ball::INIT_BALL_POSITION, &ball::MaterialColor(color_selection[chosen_index].into()));
+                    }
+               }
             }
         }
     }

@@ -73,7 +73,7 @@ pub fn spawn_single_ball(
     ..default()
     })
     .insert(RigidBody::Dynamic)
-    .insert(Sleeping::disabled())
+    //.insert(Sleeping::disabled())
     .insert(Ccd::enabled())
     .insert(Friction {
         coefficient: 0.1,
