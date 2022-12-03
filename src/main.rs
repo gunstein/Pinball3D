@@ -27,6 +27,7 @@ use target::*;
 
 mod common;
 
+//This is labels for startup systems. Makes it possible to influence startup system sequence.
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
 pub enum Pinball3DSystems {
     Main,
@@ -60,11 +61,7 @@ fn main() {
         .run();
 }
 
-
-fn setup(
-    mut commands: Commands,
-    mut rapier_config: ResMut<RapierConfiguration>,
-) {
+fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>) {
     // Set gravity to x and spawn camera
     //rapier_config.gravity = Vec3::zeroed();
     //rapier_config.gravity = Vec3::new(0.0, -0.3, -0.7);
@@ -76,13 +73,13 @@ fn setup(
     };
 
     // camera
-    /* 
+    /*
     commands.spawn_bundle(Camera3dBundle {
         //transform: Transform::from_xyz(0.0, 0.5, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
         transform: Transform::from_xyz(0.0, -2.5, 2.7).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Y),
         //transform: Transform::from_xyz(0.0, -0.1, 1.2).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
-    }); 
+    });
     */
 
     commands.spawn_bundle(PointLightBundle {
@@ -93,8 +90,7 @@ fn setup(
         },
         transform: Transform::from_xyz(-2.0, 0.0, 5.0),
         ..default()
-    });    
-    
+    });
 
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
@@ -104,14 +100,14 @@ fn setup(
         },
         transform: Transform::from_xyz(2.0, 0.0, 5.0),
         ..default()
-    });        
+    });
 
-    commands
-    .spawn_bundle(Camera3dBundle{
+    commands.spawn_bundle(Camera3dBundle {
         //transform: Transform::from_xyz(-1.0, 0.5, 0.1).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Z),
-        transform: Transform::from_xyz(0.0, -0.8, 1.8).looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z),//ok
+        transform: Transform::from_xyz(0.0, -0.8, 1.8)
+            .looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z), //ok
         //transform: Transform::from_xyz(0.32, -0.8, 0.1).looking_at(Vec3::new(0.32, -0.3, 0.0), Vec3::Z),
-        
+
         //transform: Transform::from_xyz(0.1, -0.7, 0.5).looking_at(Vec3::new(0.1, -0.7, 0.0), Vec3::Y),
         //transform: Transform::from_xyz(0.0, 0.2, 1.0).looking_at(Vec3::new(0.0, 0.2, 0.0), Vec3::Y),
         //transform: Transform::from_xyz(0.0, -1.4, 0.3).looking_at(Vec3::new(0.0, -0.5, 0.1), Vec3::Z),
