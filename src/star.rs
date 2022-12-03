@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use rand::Rng;
-use std::ops::Add;
 
 use super::ball;
 use super::bumper;
@@ -213,10 +212,8 @@ fn spawn_star(
         .id();
 
     let mut floor = None;
-    let mut floor_half_height = 0.0;
-    for (entity, half_height) in query_floors.iter() {
+    for (entity, _half_height) in query_floors.iter() {
         floor = Some(entity);
-        floor_half_height = half_height.0;
     }
 
     commands.entity(floor.unwrap()).push_children(&[
@@ -276,16 +273,15 @@ fn handle_star_ball_sensor_events(
                         //If five balls in collector. Let end_game begin.
                         //  Set endgame resource.
                         let mut balls_group5_counter = 0;
-                        for (entity_ball, mut collision_group) in query_balls.iter_mut() {
+                        for (_entity, collision_group) in query_balls.iter() {
                             //Add GROUP_5 to filters. This will activate collision between the ball and the one way gate collider
                             if (collision_group.filters & Group::GROUP_5) == Group::GROUP_5 {
                                 balls_group5_counter += 1;
                             }
                         }
 
-                        if balls_group5_counter > 1 {
+                        if balls_group5_counter > 4 {
                             end_game.0 = true;
-                            //info!("end game started.");
                         }
                     }
                 }
@@ -306,10 +302,9 @@ fn despawn_collector_when_endgame(
             //  Despawn collector, lid, sensor and right-down bumper.
             for entity_to_despawn in query_despawn_entities.iter() {
                 commands.entity(entity_to_despawn).despawn_recursive();
-                //info!("despawn.");
             }
             // remove GROUP_5 on all balls
-            for (entity_ball, mut collision_group) in query_balls.iter_mut() {
+            for (_entity_ball, mut collision_group) in query_balls.iter_mut() {
                 //Remove GROUP_5 from filter
                 collision_group.filters = collision_group.filters ^ Group::GROUP_5;
             }

@@ -93,15 +93,9 @@ fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>)
     });
 
     commands.spawn(Camera3dBundle {
-        //transform: Transform::from_xyz(-1.0, 0.5, 0.1).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Z),
         transform: Transform::from_xyz(0.0, -0.8, 1.8)
             .looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z), //ok
         //transform: Transform::from_xyz(0.32, -0.8, 0.1).looking_at(Vec3::new(0.32, -0.3, 0.0), Vec3::Z),
-
-        //transform: Transform::from_xyz(0.1, -0.7, 0.5).looking_at(Vec3::new(0.1, -0.7, 0.0), Vec3::Y),
-        //transform: Transform::from_xyz(0.0, 0.2, 1.0).looking_at(Vec3::new(0.0, 0.2, 0.0), Vec3::Y),
-        //transform: Transform::from_xyz(0.0, -1.4, 0.3).looking_at(Vec3::new(0.0, -0.5, 0.1), Vec3::Z),
-        //transform: Transform::from_xyz(0.0, -0.8, 0.011).looking_at(Vec3::new(0.0, -0.2, 0.011), Vec3::Z),
         ..default()
     });
 }

@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use std::ops::Add;
-
 use super::Ball;
 use super::Floor;
 pub struct LauncherPlugin;
@@ -154,8 +152,6 @@ fn spawn_launcher_and_gate(
 
     commands
         .entity(floor.unwrap())
-        //.push_children(&[launcher]);
-        //.push_children(&[launcher, gate_anchor, launcher_gate, gate_sensor, gate_collider]);
         .push_children(&[
             launcher,
             gate_anchor,
@@ -186,21 +182,14 @@ fn handle_gate_sensor_events(
     query_gate_sensors: Query<Entity, With<GateSensor>>,
     mut query_balls: Query<(Entity, &mut CollisionGroups), With<Ball>>,
     mut contact_events: EventReader<CollisionEvent>,
-    //mut commands: Commands,
 ) {
     for contact_event in contact_events.iter() {
         for sensor_entity in query_gate_sensors.iter() {
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &sensor_entity || h2 == &sensor_entity {
-                    //If absolutvalue of velocity in x is close to zero, ball can get stuck so apply force in x-direction.
                     //Find right ball
                     for (entity_ball, mut collision_group) in query_balls.iter_mut() {
                         if h1 == &entity_ball || h2 == &entity_ball {
-                            //if velocity.linvel.x.abs() < 0.1{
-                            //info!("handle_gate_sensor_events 1");
-                            //let force_to_add = Vec3::new(-0.0000008, 0.0, 0.0);
-                            //external_impulse.impulse = external_impulse.impulse.add(force_to_add);
-                            //}
                             //Add GROUP_4 to filters. This will activate collision between the ball and the one way gate collider
                             collision_group.filters =
                                 Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3 | Group::GROUP_4;

@@ -18,9 +18,7 @@ impl Plugin for PinPlugin {
 }
 
 #[derive(Component)]
-struct Pin {
-    position: Vec3,
-}
+struct Pin;
 
 fn spawn_pins(
     mut commands: Commands,
@@ -90,7 +88,6 @@ fn spawn_single_pin(
             ..default()
         })
         .insert(RigidBody::Fixed)
-        //.insert(Collider::ball(pin_radius))
         .insert(Collider::round_cylinder(pin_depth, pin_radius, 0.001))
         .insert(TransformBundle::from(Transform {
             translation: Vec3::new(position.x, position.y, position.z),
@@ -98,7 +95,7 @@ fn spawn_single_pin(
             ..default()
         }))
         .insert(Restitution::coefficient(0.7))
-        .insert(Pin { position: position })
+        .insert(Pin)
         .id();
 
     commands.entity(floor.unwrap()).add_child(pin);
@@ -108,13 +105,10 @@ fn handle_pin_events(
     mut query_pins: Query<(Entity, &Pin, &mut Handle<StandardMaterial>), With<Pin>>,
     mut query_balls: Query<(Entity, &mut ExternalImpulse, &Velocity), With<Ball>>,
     mut contact_events: EventReader<CollisionEvent>,
-    //mut commands: Commands,
-    //mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    //query_floors: Query<Entity, With<Floor>>,
 ) {
     for contact_event in contact_events.iter() {
-        for (entity_pin, pin, mut material) in query_pins.iter_mut() {
+        for (entity_pin, _pin, mut material) in query_pins.iter_mut() {
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &entity_pin || h2 == &entity_pin {
                     //Respawn to change color
@@ -127,11 +121,8 @@ fn handle_pin_events(
                     ];
                     let mut rng = rand::thread_rng();
                     let chosen_index = rng.gen_range(0..5);
-                    //let pos = pin.position;
                     let material_pin = materials.add(color_selection[chosen_index].into());
                     *material = material_pin.clone();
-                    //commands.entity(entity_pin).despawn();
-                    //spawn_single_pin(&mut commands, pos, Some(color_selection[chosen_index]), &mut meshes, &mut materials, &query_floors);
                 }
             }
             if let CollisionEvent::Stopped(h1, h2, _event_flag) = contact_event {

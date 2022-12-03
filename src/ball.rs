@@ -18,9 +18,6 @@ impl Plugin for BallPlugin {
 #[derive(Component)]
 pub struct Ball;
 
-//#[derive(Default, Component)]
-//struct Position(Vec3);
-
 #[derive(Default, Component)]
 pub struct MaterialColor(pub Color);
 
@@ -37,7 +34,6 @@ fn spawn_balls(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let init_balls: [InitBallBundle; 1] = [InitBallBundle {
-        //position: Position(Vec3::new(0.32, -0.83, 0.02)),
         position: INIT_BALL_POSITION,
         material_color: MaterialColor(Color::ORANGE_RED),
     }];
@@ -78,19 +74,16 @@ pub fn spawn_single_ball(
             coefficient: 0.1,
             combine_rule: CoefficientCombineRule::Min,
         })
-        //.insert(Collider::ball(0.01))
         .insert(Collider::ball(0.015))
         .insert(TransformBundle::from(Transform::from_xyz(
             position.x, position.y, position.z,
         )))
         .insert(ExternalForce {
             force: Vec3::new(0.0, 0.0, 0.0),
-            //force: Vec3::new(0.0, 0.0000007, 0.0),
             torque: Vec3::new(0.0, 0.0, 0.0),
         })
         .insert(ExternalImpulse {
             impulse: Vec3::new(0.0, 0.0, 0.0),
-            //force: Vec3::new(0.0, 0.0000007, 0.0),
             torque_impulse: Vec3::new(0.0, 0.0, 0.0),
         })
         .insert(Velocity {
@@ -111,23 +104,11 @@ fn push_ball_to_floor(
     mut query_balls: Query<(&mut ExternalForce, &mut Velocity, &Transform, &Collider), With<Ball>>,
     rapier_context: Res<RapierContext>,
 ) {
-    //info!("push_ball_to_floor 0");
-
-    //let test1 = CollisionGroups{memberships:Group::GROUP_3, filters:(Group::GROUP_1 | Group::GROUP_2)};
-    //let test2 = InteractionGroups{memberships:Group::GROUP_1, filter:Group::GROUP_1};
-    for (mut ball_force, mut ball_velocity, ball_transform, ball_collider) in query_balls.iter_mut()
+    for (mut ball_force, _ball_velocity, ball_transform, ball_collider) in query_balls.iter_mut()
     {
-        //info!("push_ball_to_floor 1");
         let max_toi = 100.0;
         let cast_velocity = Vec3::new(0.0, 0.0, -1.0);
-        //let filter = QueryFilter::default();
-        //let filter = QueryFilter::only_fixed();
-        //let filter = QueryFilter::only_fixed().groups(InteractionGroups::new(0b0100, 0b0011));
-        //Only cast to floor.
-        //let filter = QueryFilter::only_fixed().groups(InteractionGroups::new(0b0100, 0b0001));
         let filter = QueryFilter {
-            //flags: QueryFilterFlags::ONLY_FIXED,
-            //groups:Some(InteractionGroups{memberships:Group::GROUP_3, filter:Group::GROUP_1}),
             groups: Some(
                 CollisionGroups {
                     memberships: Group::GROUP_3,
@@ -135,15 +116,10 @@ fn push_ball_to_floor(
                 }
                 .into(),
             ),
-            //groups:InteractionGroups::new(Group::GROUP_3, Group::GROUP_1)),
             ..default()
         };
 
-        //println!("ball_transform.translation {:?}", ball_transform.translation);
-        //println!("ball_transform.rotation {:?}", ball_transform.rotation);
-        //println!("filter {:?}", filter.groups);
-
-        if let Some((entity, hit)) = rapier_context.cast_shape(
+        if let Some((_entity, hit)) = rapier_context.cast_shape(
             ball_transform.translation,
             ball_transform.rotation,
             cast_velocity,
@@ -151,41 +127,12 @@ fn push_ball_to_floor(
             max_toi,
             filter,
         ) {
-            //info!("push_ball_to_floor 2");
-            //println!("hit.toi {:?}", hit.toi);
             if hit.toi > 0.0 {
-                //ball_force.force = Vec3::new(0.0, 0.0, -0.00007).into();
-                //ball_force.force = Vec3::new(0.0, -0.00007, -0.00007).into();
-
                 ball_force.force = Vec3::new(0.0, 0.0, -0.0001);
-
-                //ball_force.force = Vec3::new(0.0, -0.00007, 0.0).into();
-                //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
-                //info!("push_ball_to_floor 3");
             } else {
-                //ball_force.force = Vec3::new(0.0, 0.0, 0.0).into();
-                //ball_force.force = Vec3::new(0.0, 0.00007, 0.0).into();
-
-                //ball_force.force = Vec3::new(0.0, 0.00007, -0.0007);
-
-                //ball_force.force = Vec3::new(0.0, 0.0000007, 0.0);
-
                 ball_force.force = Vec3::new(0.0, 0.0, 0.0);
-
-                //ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
-                //ball_velocity.angvel = Vec3::new(0.0, 0.0, 0.0);
-                //ball_velocity.linvel = Vec3::new(0.0, 0.0, 0.0);
-                //info!("push_ball_to_floor 4");
             }
         }
-        /*
-        else{
-            info!("zero force");
-            ball_force.force = Vec3::new(0.0, 0.0, 0.0);
-            ball_force.torque = Vec3::new(0.0, 0.0, 0.0);
-            ball_velocity.angvel = Vec3::new(0.0, 0.0, 0.0);
-            ball_velocity.linvel = Vec3::new(0.0, 0.0, 0.0);
-        }*/
     }
 }
 
@@ -198,15 +145,11 @@ fn handle_ball_intersections_with_bottom_wall(
     mut materials: ResMut<Assets<StandardMaterial>>,
     end_game: Res<common::EndGame>,
 ) {
-    //let mut should_spawn_ball = false;
-
     for entity_bottom_wall in query_bottom_wall.iter() {
         for (entity_ball, material_color) in query_ball.iter() {
             /* Find the intersection pair, if it exists, between two colliders. */
             if rapier_context.intersection_pair(entity_bottom_wall, entity_ball) == Some(true) {
                 commands.entity(entity_ball).despawn();
-                //spawn_single_ball(commands, meshes, materials);
-                //info!("spawn new ball.");
                 if end_game.0 == false {
                     spawn_single_ball(
                         &mut commands,
@@ -219,9 +162,4 @@ fn handle_ball_intersections_with_bottom_wall(
             }
         }
     }
-
-    //if should_spawn_ball
-    //{
-    //    spawn_ball(commands, meshes, materials);
-    //}
 }
