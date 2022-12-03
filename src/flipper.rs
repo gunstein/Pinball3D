@@ -18,8 +18,7 @@ struct RightFlipper {
 
 impl Plugin for FlipperPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_startup_system_to_stage(StartupStage::PostStartup, spawn_flippers)
+        app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_flippers)
             .add_system(left_flipper_movement)
             .add_system(right_flipper_movement);
     }

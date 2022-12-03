@@ -104,8 +104,7 @@ fn push_ball_to_floor(
     mut query_balls: Query<(&mut ExternalForce, &mut Velocity, &Transform, &Collider), With<Ball>>,
     rapier_context: Res<RapierContext>,
 ) {
-    for (mut ball_force, _ball_velocity, ball_transform, ball_collider) in query_balls.iter_mut()
-    {
+    for (mut ball_force, _ball_velocity, ball_transform, ball_collider) in query_balls.iter_mut() {
         let max_toi = 100.0;
         let cast_velocity = Vec3::new(0.0, 0.0, -1.0);
         let filter = QueryFilter {

@@ -150,15 +150,13 @@ fn spawn_launcher_and_gate(
         .insert(GateSensor)
         .id();
 
-    commands
-        .entity(floor.unwrap())
-        .push_children(&[
-            launcher,
-            gate_anchor,
-            launcher_gate,
-            gate_sensor,
-            gate_collider,
-        ]);
+    commands.entity(floor.unwrap()).push_children(&[
+        launcher,
+        gate_anchor,
+        launcher_gate,
+        gate_sensor,
+        gate_collider,
+    ]);
 }
 
 fn launcher_movement(

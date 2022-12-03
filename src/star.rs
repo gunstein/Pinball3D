@@ -181,7 +181,7 @@ fn spawn_star(
         starramp_width,
         starramp_height,
     )));
-    let starramp_material = materials.add(Color::rgba(1.0, 1.0, 0.0, 0.5).into());
+    let starramp_material = materials.add(Color::rgba(1.0, 1.0, 0.0, 0.8).into());
 
     let starramp = commands
         .spawn(PbrBundle {
