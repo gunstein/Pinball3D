@@ -38,15 +38,16 @@ pub enum Pinball3DSystems {
 
 fn main() {
     App::new()
-        .insert_resource(WindowDescriptor {
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+        window: WindowDescriptor {
             title: "Pinball3d".to_string(),
             width: 360.0,
             height: 640.0,
-            ..Default::default()
-        })
-        .insert_resource(Msaa::default())
-        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-        .add_plugins(DefaultPlugins)
+            ..default()
+        },
+        ..default()
+        }))
+        //.insert_resource(Msaa::default())
         .add_plugin(WallPlugin)
         .add_plugin(FlipperPlugin)
         .add_plugin(BallPlugin)
@@ -56,7 +57,7 @@ fn main() {
         .add_plugin(StarPlugin)
         .add_plugin(TargetPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierDebugRenderPlugin::default())
+        //.add_plugin(RapierDebugRenderPlugin::default())
         .add_startup_system(setup.label(Pinball3DSystems::Main))
         .run();
 }
@@ -82,7 +83,7 @@ fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>)
     });
     */
 
-    commands.spawn_bundle(PointLightBundle {
+    commands.spawn(PointLightBundle {
         point_light: PointLight {
             intensity: 1000.0,
             shadows_enabled: false,
@@ -92,7 +93,7 @@ fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>)
         ..default()
     });
 
-    commands.spawn_bundle(PointLightBundle {
+    commands.spawn(PointLightBundle {
         point_light: PointLight {
             intensity: 1000.0,
             shadows_enabled: false,
@@ -102,7 +103,7 @@ fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>)
         ..default()
     });
 
-    commands.spawn_bundle(Camera3dBundle {
+    commands.spawn(Camera3dBundle {
         //transform: Transform::from_xyz(-1.0, 0.5, 0.1).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Z),
         transform: Transform::from_xyz(0.0, -0.8, 1.8)
             .looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z), //ok

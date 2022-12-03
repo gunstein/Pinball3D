@@ -70,8 +70,7 @@ fn spawn_flippers(
     let rotation_lower_box = Quat::from_rotation_z(0.12);
 
     let left_flipper = commands
-        .spawn()
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: left_flipper_mesh_handle.clone(),
             material: material.clone(),
             ..default()
@@ -112,8 +111,7 @@ fn spawn_flippers(
     commands.entity(floor.unwrap()).add_child(left_flipper);
 
     let right_flipper = commands
-        .spawn()
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: left_flipper_mesh_handle.clone(),
             material: material.clone(),
             ..default()
@@ -140,7 +138,7 @@ fn spawn_flippers(
                 collider_lower_box.clone(),
             ),
         ]))
-        .insert_bundle(TransformBundle::from(Transform {
+        .insert(TransformBundle::from(Transform {
             translation: Vec3::new(
                 right_flipper_position.x,
                 right_flipper_position.y,

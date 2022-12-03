@@ -47,8 +47,7 @@ fn spawn_target(
     let material_target = materials.add(Color::VIOLET.into());
 
     let target = commands
-        .spawn()
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: target_mesh_handle.clone(),
             material: material_target.clone(),
             ..default()
@@ -59,7 +58,7 @@ fn spawn_target(
             target_width / 2.0,
             target_height / 2.0,
         ))
-        .insert_bundle(TransformBundle::from(Transform {
+        .insert(TransformBundle::from(Transform {
             translation: Vec3::new(
                 target_position.x,
                 target_position.y,

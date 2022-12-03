@@ -84,8 +84,7 @@ fn spawn_single_pin(
     let material_pin = materials.add(chosen_color.into());
 
     let pin = commands
-        .spawn()
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: pin_mesh_handle.clone(),
             material: material_pin.clone(),
             ..default()
@@ -93,7 +92,7 @@ fn spawn_single_pin(
         .insert(RigidBody::Fixed)
         //.insert(Collider::ball(pin_radius))
         .insert(Collider::round_cylinder(pin_depth, pin_radius, 0.001))
-        .insert_bundle(TransformBundle::from(Transform {
+        .insert(TransformBundle::from(Transform {
             translation: Vec3::new(position.x, position.y, position.z),
             rotation: Quat::from_rotation_x(std::f32::consts::PI / 2.0),
             ..default()

@@ -63,8 +63,7 @@ pub fn spawn_single_ball(
     material_color: &MaterialColor,
 ) {
     commands
-        .spawn()
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
                 radius: 0.015,
                 ..default()
@@ -81,7 +80,7 @@ pub fn spawn_single_ball(
         })
         //.insert(Collider::ball(0.01))
         .insert(Collider::ball(0.015))
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(
+        .insert(TransformBundle::from(Transform::from_xyz(
             position.x, position.y, position.z,
         )))
         .insert(ExternalForce {

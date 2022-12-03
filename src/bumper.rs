@@ -117,8 +117,7 @@ pub fn spawn_single_bumper(
     let material_bumper = materials.add(color.into());
 
     let bumper = commands
-        .spawn()
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: bumper_mesh_handle.clone(),
             material: material_bumper.clone(),
             ..default()
@@ -129,7 +128,7 @@ pub fn spawn_single_bumper(
             bumper_width / 2.0,
             bumper_height / 2.0,
         ))
-        .insert_bundle(TransformBundle::from(Transform {
+        .insert(TransformBundle::from(Transform {
             translation: Vec3::new(
                 position.0.x,
                 position.0.y,
@@ -164,7 +163,7 @@ fn change_bumper_to_dark_color(
 ) {
     //for (entity, position, rotation, timestamp_last_hit, dark_color, light_color) in query_bumpers.iter_mut() {
     for (timestamp_last_hit, dark_color, mut material) in query_bumpers.iter_mut() {
-        let diff = time.seconds_since_startup() - timestamp_last_hit.0;
+        let diff = time.raw_elapsed_seconds_f64() - timestamp_last_hit.0;
         if timestamp_last_hit.0 > 0.0 && diff > 1.0 {
             //Color have been toggled for more than a second so respawn
             //let pos = position;
@@ -201,7 +200,7 @@ fn handle_bumper_events(
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &entity || h2 == &entity {
                     //Change to light color
-                    *timestamp_last_hit = TimestampLastHit(time.seconds_since_startup());
+                    *timestamp_last_hit = TimestampLastHit(time.raw_elapsed_seconds_f64());
                     //commands.entity(entity).despawn();
                     //spawn_single_bumper(&mut commands, position, rotation, Some(timestamp_last_hit), dark_color, light_color, &mut meshes, &mut materials, &query_floors);
                     let light_material_bumper = materials.add(light_color.0.into());

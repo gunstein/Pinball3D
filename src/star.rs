@@ -81,37 +81,32 @@ fn spawn_star(
     let collector_collider_position = Vec3::new(0.0, 0.235, 0.01);
     let collector_collider_element = Collider::cuboid(0.06, 0.003, 0.07);
     let collector_collider = commands
-        .spawn()
-        .insert(RigidBody::Fixed)
+        .spawn(RigidBody::Fixed)
         .with_children(|children| {
             children
-                .spawn()
-                .insert(collector_collider_element.clone())
-                .insert_bundle(TransformBundle::from(Transform {
+                .spawn(collector_collider_element.clone())
+                .insert(TransformBundle::from(Transform {
                     translation: Vec3::new(-0.04, 0.06, 0.0),
                     rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
                     ..default()
                 }));
             children
-                .spawn()
-                .insert(collector_collider_element.clone())
-                .insert_bundle(TransformBundle::from(Transform {
+                .spawn(collector_collider_element.clone())
+                .insert(TransformBundle::from(Transform {
                     translation: Vec3::new(0.04, 0.06, 0.0),
                     rotation: Quat::from_rotation_z(-std::f32::consts::PI / 4.0),
                     ..default()
                 }));
             children
-                .spawn()
-                .insert(collector_collider_element.clone())
-                .insert_bundle(TransformBundle::from(Transform {
+                .spawn(collector_collider_element.clone())
+                .insert(TransformBundle::from(Transform {
                     translation: Vec3::new(-0.04, -0.035, 0.0),
                     rotation: Quat::from_rotation_z(-std::f32::consts::PI / 4.0),
                     ..default()
                 }));
             children
-                .spawn()
-                .insert(collector_collider_element.clone())
-                .insert_bundle(TransformBundle::from(Transform {
+                .spawn(collector_collider_element.clone())
+                .insert(TransformBundle::from(Transform {
                     translation: Vec3::new(0.04, -0.035, 0.0),
                     rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
                     ..default()
@@ -121,7 +116,7 @@ fn spawn_star(
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert_bundle(TransformBundle::from(Transform {
+        .insert(TransformBundle::from(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -134,14 +129,13 @@ fn spawn_star(
 
     //spwan one way lid on ball_collector_box, so that balls will stay inside box.
     let oneway_collector_lid = commands
-        .spawn()
-        .insert(RigidBody::Fixed)
+        .spawn(RigidBody::Fixed)
         .insert(Collider::cuboid(0.07, 0.07, 0.001))
         .insert(CollisionGroups {
             memberships: Group::GROUP_5,
             filters: Group::GROUP_3,
         })
-        .insert_bundle(TransformBundle::from(Transform {
+        .insert(TransformBundle::from(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -155,10 +149,9 @@ fn spawn_star(
     //spawn star_ball_sensor. Used to detect balls arriving in star and spawn new ball in launcher.
     //  also change group of ball so one way lid does its job.
     let collector_sensor = commands
-        .spawn()
-        .insert(Sensor)
+        .spawn(Sensor)
         .insert(Collider::cuboid(0.07, 0.07, 0.001))
-        .insert_bundle(TransformBundle::from(Transform {
+        .insert(TransformBundle::from(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -183,8 +176,7 @@ fn spawn_star(
     let starramp_material = materials.add(Color::rgba(1.0, 1.0, 0.0, 0.5).into());
 
     let starramp = commands
-        .spawn()
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: starramp_mesh_handle.clone(),
             material: starramp_material.clone(),
             ..default()
@@ -199,7 +191,7 @@ fn spawn_star(
             memberships: Group::GROUP_1,
             filters: Group::GROUP_3,
         })
-        .insert_bundle(TransformBundle::from(Transform {
+        .insert(TransformBundle::from(Transform {
             translation: Vec3::new(
                 starramp_position.x,
                 starramp_position.y,
