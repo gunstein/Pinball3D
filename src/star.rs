@@ -18,7 +18,8 @@ pub struct StarPlugin;
 impl Plugin for StarPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_star)
-            .add_system(handle_star_ball_sensor_events);
+            .add_system(handle_star_ball_sensor_events)
+            .add_system(despawn_collector_when_endgame);
     }
 }
 
@@ -40,24 +41,28 @@ fn spawn_star(
             rotation: common::Rotation(Quat::from_rotation_z(std::f32::consts::PI / 4.0)),
             dark_color: bumper::DarkColor(Color::YELLOW),
             light_color: bumper::LightColor(Color::ANTIQUE_WHITE),
+            despawn_in_endgame: false,
         },
         bumper::BumperBundle {
             position: common::Position(Vec3::new(0.06, 0.3, 0.0)),
             rotation: common::Rotation(Quat::from_rotation_z(-std::f32::consts::PI / 4.0)),
             dark_color: bumper::DarkColor(Color::YELLOW),
             light_color: bumper::LightColor(Color::ANTIQUE_WHITE),
+            despawn_in_endgame: false,
         },
         bumper::BumperBundle {
             position: common::Position(Vec3::new(0.06, 0.19, 0.0)),
             rotation: common::Rotation(Quat::from_rotation_z(std::f32::consts::PI / 4.0)),
             dark_color: bumper::DarkColor(Color::YELLOW),
             light_color: bumper::LightColor(Color::ANTIQUE_WHITE),
+            despawn_in_endgame: true,
         },
         bumper::BumperBundle {
             position: common::Position(Vec3::new(-0.06, 0.19, -0.025)),
             rotation: common::Rotation(Quat::from_rotation_z(-std::f32::consts::PI / 4.0)),
             dark_color: bumper::DarkColor(Color::YELLOW),
             light_color: bumper::LightColor(Color::ANTIQUE_WHITE),
+            despawn_in_endgame: false,
         },
     ];
 
@@ -74,6 +79,7 @@ fn spawn_star(
             &mut meshes,
             &mut materials,
             &query_floors,
+            init_bumper.despawn_in_endgame,
         );
     }
 
@@ -125,6 +131,7 @@ fn spawn_star(
             //rotation: Quat::from_rotation_z(-1.1),
             ..default()
         }))
+        .insert(common::DespawnInEndGame)
         .id();
 
     //spwan one way lid on ball_collector_box, so that balls will stay inside box.
@@ -144,6 +151,7 @@ fn spawn_star(
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             ..default()
         }))
+        .insert(common::DespawnInEndGame)
         .id();
 
     //spawn star_ball_sensor. Used to detect balls arriving in star and spawn new ball in launcher.
@@ -161,6 +169,7 @@ fn spawn_star(
             ..default()
         }))
         .insert(CollectorSensor)
+        .insert(common::DespawnInEndGame)
         .id();
 
     //Starramp
@@ -225,6 +234,7 @@ fn handle_star_ball_sensor_events(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut end_game: ResMut<common::EndGame>,
 ) {
     for contact_event in contact_events.iter() {
         for sensor_entity in query_collector_sensors.iter() {
@@ -264,25 +274,47 @@ fn handle_star_ball_sensor_events(
                         );
 
                         //If five balls in collector. Let end_game begin.
-                        //  Despawn collector, lid, sensor and right-down bumper.
-                        //  Set endgame variable.
+                        //  Set endgame resource.
                         let mut balls_group5_counter = 0;
                         for (entity_ball, mut collision_group) in query_balls.iter_mut() {
-                            if h1 == &entity_ball || h2 == &entity_ball {
-                                //Add GROUP_5 to filters. This will activate collision between the ball and the one way gate collider
-                                if (collision_group.filters & Group::GROUP_5) == Group::GROUP_5 {
-                                    balls_group5_counter += 1;
-                                }
+                            //Add GROUP_5 to filters. This will activate collision between the ball and the one way gate collider
+                            if (collision_group.filters & Group::GROUP_5) == Group::GROUP_5 {
+                                balls_group5_counter += 1;
                             }
                         }
-                        
-                        if balls_group5_counter > 4 {
-                            //common::END_GAME = true;
 
+                        if balls_group5_counter > 1 {
+                            end_game.0 = true;
+                            //info!("end game started.");
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+fn despawn_collector_when_endgame(
+    mut commands: Commands,
+    query_despawn_entities: Query<Entity, With<common::DespawnInEndGame>>,
+    mut query_balls: Query<(Entity, &mut CollisionGroups), With<Ball>>,
+    end_game: Res<common::EndGame>,
+    mut done: Local<bool>,
+) {
+    if !*done {
+        if end_game.0 == true {
+            //  Despawn collector, lid, sensor and right-down bumper.
+            for entity_to_despawn in query_despawn_entities.iter() {
+                commands.entity(entity_to_despawn).despawn_recursive();
+                //info!("despawn.");
+            }
+            // remove GROUP_5 on all balls
+            for (entity_ball, mut collision_group) in query_balls.iter_mut() {
+                //Remove GROUP_5 from filter
+                collision_group.filters = collision_group.filters ^ Group::GROUP_5;
+            }
+
+            *done = true;
         }
     }
 }

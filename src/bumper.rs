@@ -34,12 +34,13 @@ pub struct LightColor(pub Color);
 #[derive(Default, Component)]
 struct StarBallSensor;
 
-#[derive(Bundle, Default)]
+//#[derive(Bundle, Default)]
 pub struct BumperBundle {
     pub position: common::Position,
     pub rotation: common::Rotation,
     pub dark_color: DarkColor,
     pub light_color: LightColor,
+    pub despawn_in_endgame: bool,
 }
 
 fn spawn_bumpers(
@@ -54,12 +55,14 @@ fn spawn_bumpers(
             rotation: common::Rotation(Quat::from_rotation_z(-0.6)),
             dark_color: DarkColor(Color::RED),
             light_color: LightColor(Color::GOLD),
+            despawn_in_endgame: false,
         },
         BumperBundle {
             position: common::Position(Vec3::new(-0.28, -0.53, 0.0)),
             rotation: common::Rotation(Quat::from_rotation_z(std::f32::consts::PI / 2.0 + 0.12)),
             dark_color: DarkColor(Color::RED),
             light_color: LightColor(Color::GOLD),
+            despawn_in_endgame: false,
         },
     ];
 
@@ -76,6 +79,7 @@ fn spawn_bumpers(
             &mut meshes,
             &mut materials,
             &query_floors,
+            init_bumper.despawn_in_endgame,
         );
     }
 }
@@ -90,6 +94,7 @@ pub fn spawn_single_bumper(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     query_floors: &Query<(Entity, &HalfHeight), With<Floor>>,
+    add_despawn_in_endgame: bool,
 ) {
     let mut floor = None;
     let mut floor_half_height = 0.0;
@@ -145,6 +150,10 @@ pub fn spawn_single_bumper(
         .insert(DarkColor(dark_color.0))
         .insert(LightColor(light_color.0))
         .id();
+
+    if add_despawn_in_endgame {
+        commands.entity(bumper).insert(common::DespawnInEndGame);
+    }
 
     commands.entity(floor.unwrap()).add_child(bumper);
 }

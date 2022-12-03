@@ -72,7 +72,7 @@ pub fn spawn_single_ball(
             ..default()
         })
         .insert(RigidBody::Dynamic)
-        //.insert(Sleeping::disabled())
+        .insert(Sleeping::disabled())
         .insert(Ccd::enabled())
         .insert(Friction {
             coefficient: 0.1,
@@ -196,6 +196,7 @@ fn handle_ball_intersections_with_bottom_wall(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    end_game: Res<common::EndGame>,
 ) {
     //let mut should_spawn_ball = false;
 
@@ -206,13 +207,15 @@ fn handle_ball_intersections_with_bottom_wall(
                 commands.entity(entity_ball).despawn();
                 //spawn_single_ball(commands, meshes, materials);
                 //info!("spawn new ball.");
-                spawn_single_ball(
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                    &INIT_BALL_POSITION,
-                    &material_color,
-                );
+                if end_game.0 == false {
+                    spawn_single_ball(
+                        &mut commands,
+                        &mut meshes,
+                        &mut materials,
+                        &INIT_BALL_POSITION,
+                        &material_color,
+                    );
+                }
             }
         }
     }

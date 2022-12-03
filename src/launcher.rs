@@ -91,13 +91,6 @@ fn spawn_launcher_and_gate(
         .local_anchor1(Vec3::new(0.015, 0.0, 0.0)) //pos in local coordinates of joint
         .local_anchor2(Vec3::new(-0.017, 0.0, 0.04)); //pos in local coordinates of gate
 
-    //let pivot_rotation = Quat::from_rotation_z(0.1);
-    //left_flipper_transform.rotate_around(left_flipper.point_of_rotation, pivot_rotation);
-
-    //Litt rart å legge transformasjon for nedtrillingscollider her, men men...
-    //let mut transform = Transform::identity();
-    //transform.rotate_around(Vec3::new(-0.017, 0.0, 0.04), Quat::from_rotation_z(0.1));
-
     let launcher_gate = commands
         .spawn(PbrBundle {
             mesh: launcher_gate_mesh_handle.clone(),
@@ -114,28 +107,20 @@ fn spawn_launcher_and_gate(
                     memberships: Group::GROUP_2,
                     filters: Group::GROUP_3,
                 });
-            //children.spawn()
-            //.insert(Collider::cuboid(0.017,0.003, 0.04))
-            //.insert_bundle(TransformBundle::from(
-            //    transform
-            //));
-            children
-                .spawn(ImpulseJoint::new(gate_anchor, joint));
+            children.spawn(ImpulseJoint::new(gate_anchor, joint));
         })
-        //.insert(CollisionGroups{memberships:Group::GROUP_6, filters:Group::GROUP_8})
         .insert(TransformBundle::from(Transform {
             translation: Vec3::new(
                 gate_anchor_pos.x,
                 gate_anchor_pos.y,
                 gate_anchor_pos.z - 0.04,
             ),
-            //rotation: Quat::from_rotation_z(-0.92),
             ..default()
         }))
         .id();
 
     //one way gate collider, used to prevent stuck ball.
-    let gate_collider_pos = Vec3::new(0.33, -0.4, 0.05);
+    let gate_collider_pos = Vec3::new(0.33, -0.41, 0.05);
     let gate_collider = commands
         .spawn(RigidBody::Fixed)
         .insert(Collider::cuboid(0.03, 0.003, 0.04))
@@ -155,7 +140,7 @@ fn spawn_launcher_and_gate(
         .id();
 
     //Sensor above gate. Used to change collider group of ball
-    let gate_sensor_position = Vec3::new(0.33, -0.38, 0.05);
+    let gate_sensor_position = Vec3::new(0.33, -0.39, 0.05);
     let gate_sensor = commands
         .spawn(Collider::cuboid(0.03, 0.003, 0.04))
         .insert(Sensor)

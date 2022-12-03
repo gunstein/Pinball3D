@@ -81,17 +81,17 @@ fn spawn_walls(
                     ..default()
                 }));
             children.spawn(PbrBundle {
-                    mesh: tree_quad_handle.clone(),
-                    material: tree_texture_material_handle.clone(),
-                    transform: Transform::from_xyz(0.0, -0.3, 0.01),
-                    ..default()
-                });
+                mesh: tree_quad_handle.clone(),
+                material: tree_texture_material_handle.clone(),
+                transform: Transform::from_xyz(0.0, -0.3, 0.01),
+                ..default()
+            });
             children.spawn(PbrBundle {
-                    mesh: mxmas_quad_handle.clone(),
-                    material: mxmas_texture_material_handle.clone(),
-                    transform: Transform::from_xyz(0.0, -0.9, 0.01),
-                    ..default()
-                });
+                mesh: mxmas_quad_handle.clone(),
+                material: mxmas_texture_material_handle.clone(),
+                transform: Transform::from_xyz(0.0, -0.9, 0.01),
+                ..default()
+            });
         })
         .insert(CollisionGroups {
             memberships: Group::GROUP_1,

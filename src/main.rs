@@ -39,15 +39,16 @@ pub enum Pinball3DSystems {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-        window: WindowDescriptor {
-            title: "Pinball3d".to_string(),
-            width: 360.0,
-            height: 640.0,
+            window: WindowDescriptor {
+                title: "Pinball3d".to_string(),
+                width: 360.0,
+                height: 640.0,
+                ..default()
+            },
             ..default()
-        },
-        ..default()
         }))
-        //.insert_resource(Msaa::default())
+        .insert_resource(Msaa::default())
+        .insert_resource(common::EndGame(false))
         .add_plugin(WallPlugin)
         .add_plugin(FlipperPlugin)
         .add_plugin(BallPlugin)
@@ -63,9 +64,6 @@ fn main() {
 }
 
 fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>) {
-    // Set gravity to x and spawn camera
-    //rapier_config.gravity = Vec3::zeroed();
-    //rapier_config.gravity = Vec3::new(0.0, -0.3, -0.7);
     rapier_config.gravity = Vec3::new(0.0, -0.3, -1.0);
     rapier_config.timestep_mode = TimestepMode::Variable {
         max_dt: 1.0 / 60.0,
@@ -73,16 +71,7 @@ fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>)
         substeps: 2,
     };
 
-    // camera
-    /*
-    commands.spawn_bundle(Camera3dBundle {
-        //transform: Transform::from_xyz(0.0, 0.5, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
-        transform: Transform::from_xyz(0.0, -2.5, 2.7).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Y),
-        //transform: Transform::from_xyz(0.0, -0.1, 1.2).looking_at(Vec3::ZERO, Vec3::Y),
-        ..Default::default()
-    });
-    */
-
+    // camera and light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
             intensity: 1000.0,
