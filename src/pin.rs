@@ -107,7 +107,7 @@ fn handle_pin_events(
     mut contact_events: EventReader<CollisionEvent>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for contact_event in contact_events.iter() {
+    for contact_event in contact_events.read() {
         for (entity_pin, _pin, mut material) in query_pins.iter_mut() {
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &entity_pin || h2 == &entity_pin {

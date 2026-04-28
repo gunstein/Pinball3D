@@ -128,6 +128,7 @@ fn push_ball_to_floor(
             cast_velocity,
             ball_collider,
             max_toi,
+            true,
             filter,
         ) {
             if hit.toi > 0.0 {

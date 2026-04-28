@@ -171,7 +171,7 @@ fn change_bumper_to_dark_color(
 ) {
     //for (entity, position, rotation, timestamp_last_hit, dark_color, light_color) in query_bumpers.iter_mut() {
     for (timestamp_last_hit, dark_color, mut material) in query_bumpers.iter_mut() {
-        let diff = time.raw_elapsed_seconds_f64() - timestamp_last_hit.0;
+        let diff = time.elapsed_seconds_f64() - timestamp_last_hit.0;
         if timestamp_last_hit.0 > 0.0 && diff > 1.0 {
             //Color have been toggled for more than a second so respawn
             //let pos = position;
@@ -202,13 +202,13 @@ fn handle_bumper_events(
     mut materials: ResMut<Assets<StandardMaterial>>,
     //query_floors: Query<(Entity, &HalfHeight), With<Floor>>,
 ) {
-    for contact_event in contact_events.iter() {
+    for contact_event in contact_events.read() {
         for (entity, mut timestamp_last_hit, light_color, mut material) in query_bumpers.iter_mut()
         {
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &entity || h2 == &entity {
                     //Change to light color
-                    *timestamp_last_hit = TimestampLastHit(time.raw_elapsed_seconds_f64());
+                    *timestamp_last_hit = TimestampLastHit(time.elapsed_seconds_f64());
                     //commands.entity(entity).despawn();
                     //spawn_single_bumper(&mut commands, position, rotation, Some(timestamp_last_hit), dark_color, light_color, &mut meshes, &mut materials, &query_floors);
                     let light_material_bumper = materials.add(light_color.0.into());

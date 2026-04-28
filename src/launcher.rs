@@ -180,7 +180,7 @@ fn handle_gate_sensor_events(
     mut query_balls: Query<(Entity, &mut CollisionGroups), With<Ball>>,
     mut contact_events: EventReader<CollisionEvent>,
 ) {
-    for contact_event in contact_events.iter() {
+    for contact_event in contact_events.read() {
         for sensor_entity in query_gate_sensors.iter() {
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &sensor_entity || h2 == &sensor_entity {

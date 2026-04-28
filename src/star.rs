@@ -237,7 +237,7 @@ fn handle_star_ball_sensor_events(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut end_game: ResMut<common::EndGame>,
 ) {
-    for contact_event in contact_events.iter() {
+    for contact_event in contact_events.read() {
         for sensor_entity in query_collector_sensors.iter() {
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &sensor_entity || h2 == &sensor_entity {
