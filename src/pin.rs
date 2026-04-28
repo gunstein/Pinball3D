@@ -12,8 +12,8 @@ pub struct PinPlugin;
 
 impl Plugin for PinPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_pins.in_base_set(StartupSet::PostStartup))
-            .add_system(handle_pin_events);
+        app.add_systems(PostStartup, spawn_pins)
+            .add_systems(Update, handle_pin_events);
     }
 }
 

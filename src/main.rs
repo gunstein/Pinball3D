@@ -48,17 +48,19 @@ fn main() {
         }))
         .insert_resource(Msaa::default())
         .insert_resource(common::EndGame(false))
-        .add_plugin(WallPlugin)
-        .add_plugin(FlipperPlugin)
-        .add_plugin(BallPlugin)
-        .add_plugin(LauncherPlugin)
-        .add_plugin(PinPlugin)
-        .add_plugin(BumperPlugin)
-        .add_plugin(StarPlugin)
-        .add_plugin(TargetPlugin)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugins((
+            WallPlugin,
+            FlipperPlugin,
+            BallPlugin,
+            LauncherPlugin,
+            PinPlugin,
+            BumperPlugin,
+            StarPlugin,
+            TargetPlugin,
+            RapierPhysicsPlugin::<NoUserData>::default(),
+        ))
         //.add_plugin(RapierDebugRenderPlugin::default())
-        .add_startup_system(setup.in_set(Pinball3DSystems::Main))
+        .add_systems(Startup, setup.in_set(Pinball3DSystems::Main))
         .run();
 }
 

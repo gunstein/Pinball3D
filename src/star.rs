@@ -16,9 +16,13 @@ pub struct StarPlugin;
 
 impl Plugin for StarPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_star.in_base_set(StartupSet::PostStartup))
-            .add_system(handle_star_ball_sensor_events)
-            .add_system(despawn_collector_when_endgame);
+        app.add_systems(PostStartup, spawn_star).add_systems(
+            Update,
+            (
+                handle_star_ball_sensor_events,
+                despawn_collector_when_endgame,
+            ),
+        );
     }
 }
 

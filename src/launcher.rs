@@ -7,9 +7,8 @@ pub struct LauncherPlugin;
 
 impl Plugin for LauncherPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_launcher_and_gate.in_base_set(StartupSet::PostStartup))
-            .add_system(launcher_movement)
-            .add_system(handle_gate_sensor_events);
+        app.add_systems(PostStartup, spawn_launcher_and_gate)
+            .add_systems(Update, (launcher_movement, handle_gate_sensor_events));
     }
 }
 

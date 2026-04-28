@@ -16,7 +16,8 @@ pub struct BottomWall;
 
 impl Plugin for WallPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(
+        app.add_systems(
+            Startup,
             spawn_walls
                 .in_set(Pinball3DSystems::Walls)
                 .after(Pinball3DSystems::Main),
