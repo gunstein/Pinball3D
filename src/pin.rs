@@ -68,18 +68,15 @@ fn spawn_single_pin(
 
     let pin_radius = 0.035;
     let pin_depth = 0.05;
-    let pin_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(shape::Capsule {
-        depth: pin_depth,
-        radius: pin_radius,
-        ..default()
-    }));
+    let pin_mesh_handle: Handle<Mesh> =
+        meshes.add(Mesh::from(Capsule3d::new(pin_radius, pin_depth)));
 
     let mut chosen_color = Color::TEAL;
     if color.is_some() {
         chosen_color = color.unwrap();
     }
 
-    let material_pin = materials.add(chosen_color.into());
+    let material_pin = materials.add(chosen_color);
 
     let pin = commands
         .spawn(PbrBundle {
@@ -121,7 +118,7 @@ fn handle_pin_events(
                     ];
                     let mut rng = rand::thread_rng();
                     let chosen_index = rng.gen_range(0..5);
-                    let material_pin = materials.add(color_selection[chosen_index].into());
+                    let material_pin = materials.add(color_selection[chosen_index]);
                     *material = material_pin.clone();
                 }
             }

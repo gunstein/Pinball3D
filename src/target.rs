@@ -38,13 +38,13 @@ fn spawn_target(
     let target_position = Vec3::new(-0.34, -0.09, 0.03);
     let target_rotation = Quat::from_rotation_z(std::f32::consts::PI / 2.0);
 
-    let target_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(
+    let target_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(Cuboid::new(
         target_length,
         target_width,
         target_height,
     )));
 
-    let material_target = materials.add(Color::VIOLET.into());
+    let material_target = materials.add(Color::VIOLET);
 
     let target = commands
         .spawn(PbrBundle {

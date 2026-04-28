@@ -105,7 +105,7 @@ pub fn spawn_single_bumper(
     let bumper_height = 0.1;
     let bumper_length = 0.17;
     let bumper_width = 0.02;
-    let bumper_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(
+    let bumper_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(Cuboid::new(
         bumper_length,
         bumper_width,
         bumper_height,
@@ -118,7 +118,7 @@ pub fn spawn_single_bumper(
         color = dark_color.0.as_rgba();
     }
 
-    let material_bumper = materials.add(color.into());
+    let material_bumper = materials.add(color);
 
     let bumper = commands
         .spawn(PbrBundle {
@@ -178,7 +178,7 @@ fn change_bumper_to_dark_color(
             //commands.entity(entity).despawn();
             //spawn_single_bumper(&mut commands, position, rotation, None, dark_color, light_color, &mut meshes, &mut materials, &query_floors);
 
-            let dark_material_bumper = materials.add(dark_color.0.into());
+            let dark_material_bumper = materials.add(dark_color.0);
             *material = dark_material_bumper.clone();
         }
     }
@@ -211,7 +211,7 @@ fn handle_bumper_events(
                     *timestamp_last_hit = TimestampLastHit(time.elapsed_seconds_f64());
                     //commands.entity(entity).despawn();
                     //spawn_single_bumper(&mut commands, position, rotation, Some(timestamp_last_hit), dark_color, light_color, &mut meshes, &mut materials, &query_floors);
-                    let light_material_bumper = materials.add(light_color.0.into());
+                    let light_material_bumper = materials.add(light_color.0);
                     *material = light_material_bumper.clone();
                 }
             }

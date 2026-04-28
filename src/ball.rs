@@ -64,11 +64,8 @@ pub fn spawn_single_ball(
 ) {
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.015,
-                ..default()
-            })),
-            material: materials.add(material_color.0.into()),
+            mesh: meshes.add(Mesh::from(Sphere::new(0.015))),
+            material: materials.add(material_color.0),
             ..default()
         })
         .insert(RigidBody::Dynamic)

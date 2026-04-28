@@ -37,7 +37,7 @@ fn spawn_walls(
     let tree_aspect = 1.8;
 
     let tree_quad_width = 0.5;
-    let tree_quad_handle = meshes.add(Mesh::from(shape::Quad::new(Vec2::new(
+    let tree_quad_handle = meshes.add(Mesh::from(Rectangle::from_size(Vec2::new(
         tree_quad_width,
         tree_quad_width * tree_aspect,
     ))));
@@ -54,7 +54,7 @@ fn spawn_walls(
     let mxmas_aspect = 1.0;
 
     let mxmas_quad_width = 0.15;
-    let mxmas_quad_handle = meshes.add(Mesh::from(shape::Quad::new(Vec2::new(
+    let mxmas_quad_handle = meshes.add(Mesh::from(Rectangle::from_size(Vec2::new(
         mxmas_quad_width,
         mxmas_quad_width * mxmas_aspect,
     ))));
@@ -68,7 +68,7 @@ fn spawn_walls(
 
     let floor_handle: Handle<Mesh> = asset_server.load("floor.glb#Mesh0/Primitive0");
     let floor_position = Vec3::new(0.0, -0.0, 0.0);
-    let material_floor = materials.add(Color::rgb(0.0, 0.0, 1.0).into());
+    let material_floor = materials.add(Color::rgb(0.0, 0.0, 1.0));
     let floor_half_height = 0.01;
 
     let floor = commands
@@ -114,7 +114,7 @@ fn spawn_walls(
     //Outer wall
     let outer_wall_handle: Handle<Mesh> = asset_server.load("outer_wall.glb#Mesh0/Primitive0");
     let outer_wall_position = Vec3::new(0.0, 0.0, 0.0);
-    let material_outer_wall = materials.add(Color::rgb(0.0, 1.0, 0.0).into());
+    let material_outer_wall = materials.add(Color::rgb(0.0, 1.0, 0.0));
 
     //Build heights vector for half circle collider
     let mut heights = Vec::new();
@@ -191,13 +191,10 @@ fn spawn_walls(
         .id();
 
     //Left flipper wall
-    let left_flipper_wall_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(
-        0.01 * 2.0,
-        0.14 * 2.0,
-        0.05 * 2.0,
-    )));
+    let left_flipper_wall_mesh_handle: Handle<Mesh> =
+        meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.14 * 2.0, 0.05 * 2.0)));
     let left_flipper_wall_position = Vec3::new(-0.24, -0.72, 0.06);
-    let material_flipper_wall = materials.add(Color::CYAN.into());
+    let material_flipper_wall = materials.add(Color::CYAN);
 
     let left_flipper_wall = commands
         .spawn(PbrBundle {
@@ -223,11 +220,8 @@ fn spawn_walls(
         .id();
 
     //Right flipper wall
-    let right_flipper_wall_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(
-        0.01 * 2.0,
-        0.1 * 2.0,
-        0.05 * 2.0,
-    )));
+    let right_flipper_wall_mesh_handle: Handle<Mesh> =
+        meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.1 * 2.0, 0.05 * 2.0)));
     let right_flipper_wall_position = Vec3::new(0.2, -0.74, 0.06);
 
     let right_flipper_wall = commands
@@ -254,13 +248,10 @@ fn spawn_walls(
         .id();
 
     //Launcher wall
-    let launcher_wall_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(
-        0.01 * 2.0,
-        0.28 * 2.0,
-        0.05 * 2.0,
-    )));
+    let launcher_wall_mesh_handle: Handle<Mesh> =
+        meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.28 * 2.0, 0.05 * 2.0)));
     let launcher_wall_position = Vec3::new(0.3, -0.71, 0.06);
-    let material_launcher_wall = materials.add(Color::rgba(0.0, 1.0, 1.0, 0.5).into()); //Cyan
+    let material_launcher_wall = materials.add(Color::rgba(0.0, 1.0, 1.0, 0.5)); //Cyan
 
     let launcher_wall = commands
         .spawn(PbrBundle {

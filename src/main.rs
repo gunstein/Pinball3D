@@ -1,3 +1,4 @@
+use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
@@ -75,7 +76,7 @@ fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>)
     // camera and light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
-            intensity: 1000.0,
+            intensity: 1_000_000.0,
             shadows_enabled: false,
             ..default()
         },
@@ -85,7 +86,7 @@ fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>)
 
     commands.spawn(PointLightBundle {
         point_light: PointLight {
-            intensity: 1000.0,
+            intensity: 1_000_000.0,
             shadows_enabled: false,
             ..default()
         },
@@ -96,6 +97,7 @@ fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>)
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, -0.8, 1.8)
             .looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z), //ok
+        tonemapping: Tonemapping::None,
         //transform: Transform::from_xyz(0.32, -0.8, 0.1).looking_at(Vec3::new(0.32, -0.3, 0.0), Vec3::Z),
         ..default()
     });

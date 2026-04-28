@@ -32,12 +32,9 @@ fn spawn_launcher_and_gate(
     }
 
     let launcher_pos = Vec3::new(0.34, -0.95, 0.03);
-    let launcher_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(
-        0.02 * 2.0,
-        0.02 * 2.0,
-        0.02 * 2.0,
-    )));
-    let material_launcher = materials.add(Color::YELLOW.into());
+    let launcher_mesh_handle: Handle<Mesh> =
+        meshes.add(Mesh::from(Cuboid::new(0.02 * 2.0, 0.02 * 2.0, 0.02 * 2.0)));
+    let material_launcher = materials.add(Color::YELLOW);
 
     let launcher = commands
         .spawn(PbrBundle {
@@ -67,12 +64,12 @@ fn spawn_launcher_and_gate(
     //Add launcher gate, connected with joints between outer_wall and launcher_wall
     //OneWayGate
     let gate_anchor_pos = Vec3::new(0.3, -0.42, 0.1);
-    let launcher_gate_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(
+    let launcher_gate_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(Cuboid::new(
         0.017 * 2.0,
         0.003 * 2.0,
         0.04 * 2.0,
     )));
-    let material_launcher_gate = materials.add(Color::RED.into());
+    let material_launcher_gate = materials.add(Color::RED);
 
     let gate_anchor = commands
         .spawn(RigidBody::Fixed)
@@ -159,7 +156,7 @@ fn spawn_launcher_and_gate(
 }
 
 fn launcher_movement(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut launchers: Query<(&mut Launcher, &mut Transform), With<Launcher>>,
 ) {
     for (launcher, mut launcher_transform) in launchers.iter_mut() {

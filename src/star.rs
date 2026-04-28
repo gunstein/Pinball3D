@@ -180,12 +180,12 @@ fn spawn_star(
     let starramp_length = 0.16;
     let starramp_width = 0.1;
     let starramp_position = Vec3::new(-0.1, 0.135, 0.02);
-    let starramp_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(shape::Box::new(
+    let starramp_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(Cuboid::new(
         starramp_length,
         starramp_width,
         starramp_height,
     )));
-    let starramp_material = materials.add(Color::rgba(1.0, 1.0, 0.0, 0.8).into());
+    let starramp_material = materials.add(Color::rgba(1.0, 1.0, 0.0, 0.8));
 
     let starramp = commands
         .spawn(PbrBundle {
