@@ -121,18 +121,17 @@ pub fn spawn_single_bumper(
     let material_bumper = materials.add(color);
 
     let bumper = commands
-        .spawn(PbrBundle {
-            mesh: bumper_mesh_handle.clone(),
-            material: material_bumper.clone(),
-            ..default()
-        })
+        .spawn((
+            Mesh3d(bumper_mesh_handle.clone()),
+            MeshMaterial3d(material_bumper.clone()),
+        ))
         .insert(RigidBody::Fixed)
         .insert(Collider::cuboid(
             bumper_length / 2.0,
             bumper_width / 2.0,
             bumper_height / 2.0,
         ))
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(
                 position.0.x,
                 position.0.y,
@@ -140,7 +139,7 @@ pub fn spawn_single_bumper(
             ),
             rotation: rotation.0,
             ..default()
-        }))
+        })
         .insert(Restitution::coefficient(0.7))
         .insert(Bumper)
         .insert(common::Position(position.0))
@@ -160,7 +159,11 @@ pub fn spawn_single_bumper(
 //fn respawn_bumper_to_toggle_color(mut query_bumpers: Query<(Entity, &Position, &Rotation, &TimestampLastHit, &DarkColor, &LightColor), With<Bumper>>,
 fn change_bumper_to_dark_color(
     mut query_bumpers: Query<
-        (&TimestampLastHit, &DarkColor, &mut Handle<StandardMaterial>),
+        (
+            &TimestampLastHit,
+            &DarkColor,
+            &mut MeshMaterial3d<StandardMaterial>,
+        ),
         With<Bumper>,
     >,
     time: Res<Time>,
@@ -171,7 +174,7 @@ fn change_bumper_to_dark_color(
 ) {
     //for (entity, position, rotation, timestamp_last_hit, dark_color, light_color) in query_bumpers.iter_mut() {
     for (timestamp_last_hit, dark_color, mut material) in query_bumpers.iter_mut() {
-        let diff = time.elapsed_seconds_f64() - timestamp_last_hit.0;
+        let diff = time.elapsed_secs_f64() - timestamp_last_hit.0;
         if timestamp_last_hit.0 > 0.0 && diff > 1.0 {
             //Color have been toggled for more than a second so respawn
             //let pos = position;
@@ -179,7 +182,7 @@ fn change_bumper_to_dark_color(
             //spawn_single_bumper(&mut commands, position, rotation, None, dark_color, light_color, &mut meshes, &mut materials, &query_floors);
 
             let dark_material_bumper = materials.add(dark_color.0);
-            *material = dark_material_bumper.clone();
+            *material = MeshMaterial3d(dark_material_bumper.clone());
         }
     }
 }
@@ -190,7 +193,7 @@ fn handle_bumper_events(
             Entity,
             &mut TimestampLastHit,
             &LightColor,
-            &mut Handle<StandardMaterial>,
+            &mut MeshMaterial3d<StandardMaterial>,
         ),
         With<Bumper>,
     >,
@@ -208,11 +211,11 @@ fn handle_bumper_events(
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &entity || h2 == &entity {
                     //Change to light color
-                    *timestamp_last_hit = TimestampLastHit(time.elapsed_seconds_f64());
+                    *timestamp_last_hit = TimestampLastHit(time.elapsed_secs_f64());
                     //commands.entity(entity).despawn();
                     //spawn_single_bumper(&mut commands, position, rotation, Some(timestamp_last_hit), dark_color, light_color, &mut meshes, &mut materials, &query_floors);
                     let light_material_bumper = materials.add(light_color.0);
-                    *material = light_material_bumper.clone();
+                    *material = MeshMaterial3d(light_material_bumper.clone());
                 }
             }
             if let CollisionEvent::Stopped(h1, h2, _event_flag) = contact_event {

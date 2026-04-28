@@ -94,38 +94,38 @@ fn spawn_star(
         .with_children(|children| {
             children
                 .spawn(collector_collider_element.clone())
-                .insert(TransformBundle::from(Transform {
+                .insert(Transform {
                     translation: Vec3::new(-0.04, 0.06, 0.0),
                     rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
                     ..default()
-                }));
+                });
             children
                 .spawn(collector_collider_element.clone())
-                .insert(TransformBundle::from(Transform {
+                .insert(Transform {
                     translation: Vec3::new(0.04, 0.06, 0.0),
                     rotation: Quat::from_rotation_z(-std::f32::consts::PI / 4.0),
                     ..default()
-                }));
+                });
             children
                 .spawn(collector_collider_element.clone())
-                .insert(TransformBundle::from(Transform {
+                .insert(Transform {
                     translation: Vec3::new(-0.04, -0.035, 0.0),
                     rotation: Quat::from_rotation_z(-std::f32::consts::PI / 4.0),
                     ..default()
-                }));
+                });
             children
                 .spawn(collector_collider_element.clone())
-                .insert(TransformBundle::from(Transform {
+                .insert(Transform {
                     translation: Vec3::new(0.04, -0.035, 0.0),
                     rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
                     ..default()
-                }));
+                });
         })
         .insert(CollisionGroups {
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -133,7 +133,7 @@ fn spawn_star(
             ),
             //rotation: Quat::from_rotation_z(-1.1),
             ..default()
-        }))
+        })
         .insert(common::DespawnInEndGame)
         .id();
 
@@ -145,7 +145,7 @@ fn spawn_star(
             memberships: Group::GROUP_5,
             filters: Group::GROUP_3,
         })
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -153,7 +153,7 @@ fn spawn_star(
             ),
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             ..default()
-        }))
+        })
         .insert(common::DespawnInEndGame)
         .id();
 
@@ -162,7 +162,7 @@ fn spawn_star(
     let collector_sensor = commands
         .spawn(Sensor)
         .insert(Collider::cuboid(0.07, 0.07, 0.001))
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -170,7 +170,7 @@ fn spawn_star(
             ),
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             ..default()
-        }))
+        })
         .insert(CollectorSensor)
         .insert(common::DespawnInEndGame)
         .id();
@@ -188,11 +188,10 @@ fn spawn_star(
     let starramp_material = materials.add(Color::srgba(1.0, 1.0, 0.0, 0.8));
 
     let starramp = commands
-        .spawn(PbrBundle {
-            mesh: starramp_mesh_handle.clone(),
-            material: starramp_material.clone(),
-            ..default()
-        })
+        .spawn((
+            Mesh3d(starramp_mesh_handle.clone()),
+            MeshMaterial3d(starramp_material.clone()),
+        ))
         .insert(RigidBody::Fixed)
         .insert(Collider::cuboid(
             starramp_length / 2.0,
@@ -203,7 +202,7 @@ fn spawn_star(
             memberships: Group::GROUP_1,
             filters: Group::GROUP_3,
         })
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(
                 starramp_position.x,
                 starramp_position.y,
@@ -212,7 +211,7 @@ fn spawn_star(
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0)
                 * Quat::from_rotation_y(-std::f32::consts::PI / 6.0),
             ..default()
-        }))
+        })
         .id();
 
     let mut floor = None;
@@ -220,7 +219,7 @@ fn spawn_star(
         floor = Some(entity);
     }
 
-    commands.entity(floor.unwrap()).push_children(&[
+    commands.entity(floor.unwrap()).add_children(&[
         collector_collider,
         oneway_collector_lid,
         collector_sensor,

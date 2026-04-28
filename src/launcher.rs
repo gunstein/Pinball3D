@@ -37,11 +37,10 @@ fn spawn_launcher_and_gate(
     let material_launcher = materials.add(Color::srgb(1.0, 1.0, 0.0));
 
     let launcher = commands
-        .spawn(PbrBundle {
-            mesh: launcher_mesh_handle.clone(),
-            material: material_launcher.clone(),
-            ..default()
-        })
+        .spawn((
+            Mesh3d(launcher_mesh_handle.clone()),
+            MeshMaterial3d(material_launcher.clone()),
+        ))
         .insert(RigidBody::KinematicPositionBased)
         .insert(Sleeping::disabled())
         .insert(Ccd::enabled())
@@ -50,11 +49,11 @@ fn spawn_launcher_and_gate(
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(TransformBundle::from(Transform::from_xyz(
+        .insert(Transform::from_xyz(
             launcher_pos.x,
             launcher_pos.y,
             launcher_pos.z,
-        )))
+        ))
         .insert(Launcher {
             start_pos: launcher_pos,
         })
@@ -73,10 +72,10 @@ fn spawn_launcher_and_gate(
 
     let gate_anchor = commands
         .spawn(RigidBody::Fixed)
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z),
             ..default()
-        }))
+        })
         .id();
 
     let joint_axis = Vec3::new(1.0, 0.0, 0.0);
@@ -86,11 +85,10 @@ fn spawn_launcher_and_gate(
         .local_anchor2(Vec3::new(-0.017, 0.0, 0.04)); //pos in local coordinates of gate
 
     let launcher_gate = commands
-        .spawn(PbrBundle {
-            mesh: launcher_gate_mesh_handle.clone(),
-            material: material_launcher_gate.clone(),
-            ..default()
-        })
+        .spawn((
+            Mesh3d(launcher_gate_mesh_handle.clone()),
+            MeshMaterial3d(material_launcher_gate.clone()),
+        ))
         .insert(RigidBody::Dynamic)
         .insert(Sleeping::disabled())
         .insert(Ccd::enabled())
@@ -103,14 +101,14 @@ fn spawn_launcher_and_gate(
                 });
             children.spawn(ImpulseJoint::new(gate_anchor, joint));
         })
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(
                 gate_anchor_pos.x,
                 gate_anchor_pos.y,
                 gate_anchor_pos.z - 0.04,
             ),
             ..default()
-        }))
+        })
         .id();
 
     //one way gate collider, used to prevent stuck ball.
@@ -122,7 +120,7 @@ fn spawn_launcher_and_gate(
             memberships: Group::GROUP_4,
             filters: Group::GROUP_3,
         })
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(
                 gate_collider_pos.x,
                 gate_collider_pos.y,
@@ -130,7 +128,7 @@ fn spawn_launcher_and_gate(
             ),
             rotation: Quat::from_rotation_z(0.1),
             ..default()
-        }))
+        })
         .id();
 
     //Sensor above gate. Used to change collider group of ball
@@ -138,15 +136,15 @@ fn spawn_launcher_and_gate(
     let gate_sensor = commands
         .spawn(Collider::cuboid(0.03, 0.003, 0.04))
         .insert(Sensor)
-        .insert(TransformBundle::from(Transform::from_xyz(
+        .insert(Transform::from_xyz(
             gate_sensor_position.x,
             gate_sensor_position.y,
             gate_sensor_position.z,
-        )))
+        ))
         .insert(GateSensor)
         .id();
 
-    commands.entity(floor.unwrap()).push_children(&[
+    commands.entity(floor.unwrap()).add_children(&[
         launcher,
         gate_anchor,
         launcher_gate,

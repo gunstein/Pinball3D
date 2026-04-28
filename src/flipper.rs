@@ -57,11 +57,10 @@ fn spawn_flippers(
     let rotation_lower_box = Quat::from_rotation_z(0.12);
 
     let left_flipper = commands
-        .spawn(PbrBundle {
-            mesh: left_flipper_mesh_handle.clone(),
-            material: material.clone(),
-            ..default()
-        })
+        .spawn((
+            Mesh3d(left_flipper_mesh_handle.clone()),
+            MeshMaterial3d(material.clone()),
+        ))
         .insert(RigidBody::KinematicPositionBased)
         .insert(Sleeping::disabled())
         .insert(Ccd::enabled())
@@ -85,22 +84,21 @@ fn spawn_flippers(
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(TransformBundle::from(Transform::from_xyz(
+        .insert(Transform::from_xyz(
             left_flipper_position.x,
             left_flipper_position.y,
             left_flipper_position.z,
-        )))
+        ))
         .insert(LeftFlipper { curr_angle: 0.0 })
         .id();
 
     commands.entity(floor.unwrap()).add_child(left_flipper);
 
     let right_flipper = commands
-        .spawn(PbrBundle {
-            mesh: left_flipper_mesh_handle.clone(),
-            material: material.clone(),
-            ..default()
-        })
+        .spawn((
+            Mesh3d(left_flipper_mesh_handle.clone()),
+            MeshMaterial3d(material.clone()),
+        ))
         .insert(RigidBody::KinematicPositionBased)
         .insert(Sleeping::disabled())
         .insert(Ccd::enabled())
@@ -120,7 +118,7 @@ fn spawn_flippers(
                 collider_lower_box.clone(),
             ),
         ]))
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(
                 right_flipper_position.x,
                 right_flipper_position.y,
@@ -128,7 +126,7 @@ fn spawn_flippers(
             ),
             rotation: Quat::from_rotation_z(-std::f32::consts::PI),
             ..default()
-        }))
+        })
         .insert(CollisionGroups {
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,

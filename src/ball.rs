@@ -63,11 +63,10 @@ pub fn spawn_single_ball(
     material_color: &MaterialColor,
 ) {
     commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(Sphere::new(0.015))),
-            material: materials.add(material_color.0),
-            ..default()
-        })
+        .spawn((
+            Mesh3d(meshes.add(Mesh::from(Sphere::new(0.015)))),
+            MeshMaterial3d(materials.add(material_color.0)),
+        ))
         .insert(RigidBody::Dynamic)
         .insert(Sleeping::disabled())
         .insert(Ccd::enabled())
@@ -76,9 +75,7 @@ pub fn spawn_single_ball(
             combine_rule: CoefficientCombineRule::Min,
         })
         .insert(Collider::ball(0.015))
-        .insert(TransformBundle::from(Transform::from_xyz(
-            position.x, position.y, position.z,
-        )))
+        .insert(Transform::from_xyz(position.x, position.y, position.z))
         .insert(ExternalForce {
             force: Vec3::new(0.0, 0.0, 0.0),
             torque: Vec3::new(0.0, 0.0, 0.0),
@@ -103,7 +100,7 @@ pub fn spawn_single_ball(
 
 fn push_ball_to_floor(
     mut query_balls: Query<(&mut ExternalForce, &mut Velocity, &Transform, &Collider), With<Ball>>,
-    rapier_context: Res<RapierContext>,
+    rapier_context: ReadDefaultRapierContext,
 ) {
     for (mut ball_force, _ball_velocity, ball_transform, ball_collider) in query_balls.iter_mut() {
         let max_toi = 100.0;
@@ -137,7 +134,7 @@ fn push_ball_to_floor(
 }
 
 fn handle_ball_intersections_with_bottom_wall(
-    rapier_context: Res<RapierContext>,
+    rapier_context: ReadDefaultRapierContext,
     query_ball: Query<(Entity, &MaterialColor), With<Ball>>,
     query_bottom_wall: Query<Entity, With<BottomWall>>,
     mut commands: Commands,

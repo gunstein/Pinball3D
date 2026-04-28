@@ -47,7 +47,11 @@ fn main() {
             }),
             ..default()
         }))
-        .insert_resource(Msaa::default())
+        .insert_resource(TimestepMode::Variable {
+            max_dt: 1.0 / 60.0,
+            time_scale: 1.0,
+            substeps: 2,
+        })
         .insert_resource(common::EndGame(false))
         .add_plugins((
             WallPlugin,
@@ -65,40 +69,36 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>) {
+fn setup(
+    mut commands: Commands,
+    mut rapier_config: Query<&mut RapierConfiguration, With<DefaultRapierContext>>,
+) {
+    let mut rapier_config = rapier_config.single_mut();
     rapier_config.gravity = Vec3::new(0.0, -0.3, -1.0);
-    rapier_config.timestep_mode = TimestepMode::Variable {
-        max_dt: 1.0 / 60.0,
-        time_scale: 1.0,
-        substeps: 2,
-    };
 
     // camera and light
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
+    commands.spawn((
+        PointLight {
             intensity: 1_000_000.0,
             shadows_enabled: false,
             ..default()
         },
-        transform: Transform::from_xyz(-2.0, 0.0, 5.0),
-        ..default()
-    });
+        Transform::from_xyz(-2.0, 0.0, 5.0),
+    ));
 
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
+    commands.spawn((
+        PointLight {
             intensity: 1_000_000.0,
             shadows_enabled: false,
             ..default()
         },
-        transform: Transform::from_xyz(2.0, 0.0, 5.0),
-        ..default()
-    });
+        Transform::from_xyz(2.0, 0.0, 5.0),
+    ));
 
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, -0.8, 1.8)
-            .looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z), //ok
-        tonemapping: Tonemapping::None,
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(0.0, -0.8, 1.8).looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z), //ok
+        Tonemapping::None,
         //transform: Transform::from_xyz(0.32, -0.8, 0.1).looking_at(Vec3::new(0.32, -0.3, 0.0), Vec3::Z),
-        ..default()
-    });
+    ));
 }

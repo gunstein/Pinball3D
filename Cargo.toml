@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8"
-bevy = { version = "0.14", default-features = false, features = [
+bevy = { version = "0.15", default-features = false, features = [
     "bevy_asset",
     "bevy_winit",
     "bevy_core_pipeline",
@@ -19,7 +19,7 @@ bevy = { version = "0.14", default-features = false, features = [
     "tonemapping_luts",
     "multi_threaded",
 ] }
-bevy_rapier3d = "0.27"
+bevy_rapier3d = "0.28"
 
 [profile.release]
 opt-level = 'z'

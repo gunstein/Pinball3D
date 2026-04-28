@@ -47,18 +47,17 @@ fn spawn_target(
     let material_target = materials.add(Color::srgb(0.93, 0.51, 0.93));
 
     let target = commands
-        .spawn(PbrBundle {
-            mesh: target_mesh_handle.clone(),
-            material: material_target.clone(),
-            ..default()
-        })
+        .spawn((
+            Mesh3d(target_mesh_handle.clone()),
+            MeshMaterial3d(material_target.clone()),
+        ))
         .insert(RigidBody::Fixed)
         .insert(Collider::cuboid(
             target_length / 2.0,
             target_width / 2.0,
             target_height / 2.0,
         ))
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(
                 target_position.x,
                 target_position.y,
@@ -66,7 +65,7 @@ fn spawn_target(
             ),
             rotation: target_rotation,
             ..default()
-        }))
+        })
         .insert(Target)
         .id();
 

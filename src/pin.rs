@@ -79,18 +79,17 @@ fn spawn_single_pin(
     let material_pin = materials.add(chosen_color);
 
     let pin = commands
-        .spawn(PbrBundle {
-            mesh: pin_mesh_handle.clone(),
-            material: material_pin.clone(),
-            ..default()
-        })
+        .spawn((
+            Mesh3d(pin_mesh_handle.clone()),
+            MeshMaterial3d(material_pin.clone()),
+        ))
         .insert(RigidBody::Fixed)
         .insert(Collider::round_cylinder(pin_depth, pin_radius, 0.001))
-        .insert(TransformBundle::from(Transform {
+        .insert(Transform {
             translation: Vec3::new(position.x, position.y, position.z),
             rotation: Quat::from_rotation_x(std::f32::consts::PI / 2.0),
             ..default()
-        }))
+        })
         .insert(Restitution::coefficient(0.7))
         .insert(Pin)
         .id();
@@ -99,7 +98,7 @@ fn spawn_single_pin(
 }
 
 fn handle_pin_events(
-    mut query_pins: Query<(Entity, &Pin, &mut Handle<StandardMaterial>), With<Pin>>,
+    mut query_pins: Query<(Entity, &Pin, &mut MeshMaterial3d<StandardMaterial>), With<Pin>>,
     mut query_balls: Query<(Entity, &mut ExternalImpulse, &Velocity), With<Ball>>,
     mut contact_events: EventReader<CollisionEvent>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -119,7 +118,7 @@ fn handle_pin_events(
                     let mut rng = rand::thread_rng();
                     let chosen_index = rng.gen_range(0..5);
                     let material_pin = materials.add(color_selection[chosen_index]);
-                    *material = material_pin.clone();
+                    *material = MeshMaterial3d(material_pin.clone());
                 }
             }
             if let CollisionEvent::Stopped(h1, h2, _event_flag) = contact_event {
