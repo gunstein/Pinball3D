@@ -9,7 +9,7 @@ pub struct BallPlugin;
 
 impl Plugin for BallPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_balls)
+        app.add_startup_system(spawn_balls.in_base_set(StartupSet::PostStartup))
             .add_system(push_ball_to_floor)
             .add_system(handle_ball_intersections_with_bottom_wall);
     }

@@ -13,7 +13,7 @@ pub struct BumperPlugin;
 
 impl Plugin for BumperPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PostStartup, spawn_bumpers)
+        app.add_startup_system(spawn_bumpers.in_base_set(StartupSet::PostStartup))
             .add_system(handle_bumper_events)
             .add_system(change_bumper_to_dark_color);
     }

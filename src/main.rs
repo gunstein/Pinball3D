@@ -27,8 +27,8 @@ use target::*;
 
 mod common;
 
-//This is labels for startup systems. Makes it possible to influence startup system sequence.
-#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
+//This is sets for startup systems. Makes it possible to influence startup system sequence.
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 pub enum Pinball3DSystems {
     Main,
     Walls,
@@ -39,12 +39,11 @@ pub enum Pinball3DSystems {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-            window: WindowDescriptor {
+            primary_window: Some(Window {
                 title: "Pinball3d".to_string(),
-                width: 360.0,
-                height: 640.0,
+                resolution: (360.0, 640.0).into(),
                 ..default()
-            },
+            }),
             ..default()
         }))
         .insert_resource(Msaa::default())
@@ -59,7 +58,7 @@ fn main() {
         .add_plugin(TargetPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         //.add_plugin(RapierDebugRenderPlugin::default())
-        .add_startup_system(setup.label(Pinball3DSystems::Main))
+        .add_startup_system(setup.in_set(Pinball3DSystems::Main))
         .run();
 }
 
