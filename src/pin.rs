@@ -71,7 +71,7 @@ fn spawn_single_pin(
     let pin_mesh_handle: Handle<Mesh> =
         meshes.add(Mesh::from(Capsule3d::new(pin_radius, pin_depth)));
 
-    let mut chosen_color = Color::TEAL;
+    let mut chosen_color = Color::srgb(0.0, 0.5, 0.5);
     if color.is_some() {
         chosen_color = color.unwrap();
     }
@@ -110,11 +110,11 @@ fn handle_pin_events(
                 if h1 == &entity_pin || h2 == &entity_pin {
                     //Respawn to change color
                     let color_selection: [Color; 5] = [
-                        Color::YELLOW,
-                        Color::RED,
-                        Color::BLUE,
-                        Color::GREEN,
-                        Color::PINK,
+                        Color::srgb(1.0, 1.0, 0.0),
+                        Color::srgb(1.0, 0.0, 0.0),
+                        Color::srgb(0.0, 0.0, 1.0),
+                        Color::srgb(0.0, 0.5, 0.0),
+                        Color::srgb(1.0, 0.753, 0.796),
                     ];
                     let mut rng = rand::thread_rng();
                     let chosen_index = rng.gen_range(0..5);

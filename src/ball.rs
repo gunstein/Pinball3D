@@ -39,7 +39,7 @@ fn spawn_balls(
 ) {
     let init_balls: [InitBallBundle; 1] = [InitBallBundle {
         position: INIT_BALL_POSITION,
-        material_color: MaterialColor(Color::ORANGE_RED),
+        material_color: MaterialColor(Color::srgb(1.0, 0.27, 0.0)),
     }];
 
     for i in 0..init_balls.len() {
@@ -124,11 +124,10 @@ fn push_ball_to_floor(
             ball_transform.rotation,
             cast_velocity,
             ball_collider,
-            max_toi,
-            true,
+            ShapeCastOptions::with_max_time_of_impact(max_toi),
             filter,
         ) {
-            if hit.toi > 0.0 {
+            if hit.time_of_impact > 0.0 {
                 ball_force.force = Vec3::new(0.0, 0.0, -0.0001);
             } else {
                 ball_force.force = Vec3::new(0.0, 0.0, 0.0);

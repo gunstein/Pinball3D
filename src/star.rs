@@ -42,29 +42,29 @@ fn spawn_star(
         bumper::BumperBundle {
             position: common::Position(Vec3::new(-0.06, 0.3, 0.0)),
             rotation: common::Rotation(Quat::from_rotation_z(std::f32::consts::PI / 4.0)),
-            dark_color: bumper::DarkColor(Color::YELLOW),
-            light_color: bumper::LightColor(Color::ANTIQUE_WHITE),
+            dark_color: bumper::DarkColor(Color::srgb(1.0, 1.0, 0.0)),
+            light_color: bumper::LightColor(Color::srgb(0.98, 0.922, 0.843)),
             despawn_in_endgame: false,
         },
         bumper::BumperBundle {
             position: common::Position(Vec3::new(0.06, 0.3, 0.0)),
             rotation: common::Rotation(Quat::from_rotation_z(-std::f32::consts::PI / 4.0)),
-            dark_color: bumper::DarkColor(Color::YELLOW),
-            light_color: bumper::LightColor(Color::ANTIQUE_WHITE),
+            dark_color: bumper::DarkColor(Color::srgb(1.0, 1.0, 0.0)),
+            light_color: bumper::LightColor(Color::srgb(0.98, 0.922, 0.843)),
             despawn_in_endgame: false,
         },
         bumper::BumperBundle {
             position: common::Position(Vec3::new(0.06, 0.19, 0.0)),
             rotation: common::Rotation(Quat::from_rotation_z(std::f32::consts::PI / 4.0)),
-            dark_color: bumper::DarkColor(Color::YELLOW),
-            light_color: bumper::LightColor(Color::ANTIQUE_WHITE),
+            dark_color: bumper::DarkColor(Color::srgb(1.0, 1.0, 0.0)),
+            light_color: bumper::LightColor(Color::srgb(0.98, 0.922, 0.843)),
             despawn_in_endgame: true,
         },
         bumper::BumperBundle {
             position: common::Position(Vec3::new(-0.06, 0.19, -0.025)),
             rotation: common::Rotation(Quat::from_rotation_z(-std::f32::consts::PI / 4.0)),
-            dark_color: bumper::DarkColor(Color::YELLOW),
-            light_color: bumper::LightColor(Color::ANTIQUE_WHITE),
+            dark_color: bumper::DarkColor(Color::srgb(1.0, 1.0, 0.0)),
+            light_color: bumper::LightColor(Color::srgb(0.98, 0.922, 0.843)),
             despawn_in_endgame: false,
         },
     ];
@@ -185,7 +185,7 @@ fn spawn_star(
         starramp_width,
         starramp_height,
     )));
-    let starramp_material = materials.add(Color::rgba(1.0, 1.0, 0.0, 0.8));
+    let starramp_material = materials.add(Color::srgba(1.0, 1.0, 0.0, 0.8));
 
     let starramp = commands
         .spawn(PbrBundle {
@@ -258,11 +258,11 @@ fn handle_star_ball_sensor_events(
                     if group5_added {
                         //spawn new ball
                         let color_selection: [Color; 5] = [
-                            Color::YELLOW,
-                            Color::ORANGE,
-                            Color::YELLOW_GREEN,
-                            Color::GREEN,
-                            Color::PINK,
+                            Color::srgb(1.0, 1.0, 0.0),
+                            Color::srgb(1.0, 0.647, 0.0),
+                            Color::srgb(0.6, 0.8, 0.2),
+                            Color::srgb(0.0, 0.5, 0.0),
+                            Color::srgb(1.0, 0.753, 0.796),
                         ];
                         let mut rng = rand::thread_rng();
                         let chosen_index = rng.gen_range(0..5);

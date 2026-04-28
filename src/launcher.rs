@@ -34,7 +34,7 @@ fn spawn_launcher_and_gate(
     let launcher_pos = Vec3::new(0.34, -0.95, 0.03);
     let launcher_mesh_handle: Handle<Mesh> =
         meshes.add(Mesh::from(Cuboid::new(0.02 * 2.0, 0.02 * 2.0, 0.02 * 2.0)));
-    let material_launcher = materials.add(Color::YELLOW);
+    let material_launcher = materials.add(Color::srgb(1.0, 1.0, 0.0));
 
     let launcher = commands
         .spawn(PbrBundle {
@@ -69,7 +69,7 @@ fn spawn_launcher_and_gate(
         0.003 * 2.0,
         0.04 * 2.0,
     )));
-    let material_launcher_gate = materials.add(Color::RED);
+    let material_launcher_gate = materials.add(Color::srgb(1.0, 0.0, 0.0));
 
     let gate_anchor = commands
         .spawn(RigidBody::Fixed)

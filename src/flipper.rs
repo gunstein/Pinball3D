@@ -38,7 +38,7 @@ fn spawn_flippers(
     let left_flipper_mesh_handle: Handle<Mesh> =
         asset_server.load("left_flipper.glb#Mesh0/Primitive0");
 
-    let material = materials.add(Color::YELLOW);
+    let material = materials.add(Color::srgb(1.0, 1.0, 0.0));
 
     let left_flipper_position = Vec3::new(-0.1, -0.8, 0.01);
     let right_flipper_position = Vec3::new(0.1, -0.8, floor_half_height);

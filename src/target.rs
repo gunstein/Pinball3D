@@ -44,7 +44,7 @@ fn spawn_target(
         target_height,
     )));
 
-    let material_target = materials.add(Color::VIOLET);
+    let material_target = materials.add(Color::srgb(0.93, 0.51, 0.93));
 
     let target = commands
         .spawn(PbrBundle {

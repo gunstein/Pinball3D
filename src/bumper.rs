@@ -52,15 +52,15 @@ fn spawn_bumpers(
         BumperBundle {
             position: common::Position(Vec3::new(-0.2, -0.66, 0.0)),
             rotation: common::Rotation(Quat::from_rotation_z(-0.6)),
-            dark_color: DarkColor(Color::RED),
-            light_color: LightColor(Color::GOLD),
+            dark_color: DarkColor(Color::srgb(1.0, 0.0, 0.0)),
+            light_color: LightColor(Color::srgb(1.0, 0.843, 0.0)),
             despawn_in_endgame: false,
         },
         BumperBundle {
             position: common::Position(Vec3::new(-0.28, -0.53, 0.0)),
             rotation: common::Rotation(Quat::from_rotation_z(std::f32::consts::PI / 2.0 + 0.12)),
-            dark_color: DarkColor(Color::RED),
-            light_color: LightColor(Color::GOLD),
+            dark_color: DarkColor(Color::srgb(1.0, 0.0, 0.0)),
+            light_color: LightColor(Color::srgb(1.0, 0.843, 0.0)),
             despawn_in_endgame: false,
         },
     ];
@@ -113,9 +113,9 @@ pub fn spawn_single_bumper(
 
     let temp_timestamp_last_hit = timestamp_last_hit.unwrap_or(0.0);
 
-    let mut color = light_color.0.as_rgba();
+    let mut color = light_color.0;
     if temp_timestamp_last_hit == 0.0 {
-        color = dark_color.0.as_rgba();
+        color = dark_color.0;
     }
 
     let material_bumper = materials.add(color);
