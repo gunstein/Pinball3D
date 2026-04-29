@@ -84,62 +84,63 @@ fn spawn_star(
     //spawn ball_collector_collider_box
     let collector_collider_position = Vec3::new(0.0, 0.235, 0.01);
     let collector_collider_element = Collider::cuboid(0.06, 0.003, 0.07);
+
     commands
-        .spawn(RigidBody::Fixed)
+        .spawn((
+            RigidBody::Fixed,
+            CollisionGroups {
+                memberships: Group::GROUP_2,
+                filters: Group::GROUP_3,
+            },
+            common::board_transform(Transform {
+                translation: collector_collider_position,
+                ..default()
+            }),
+            common::DespawnInEndGame,
+        ))
         .with_children(|children| {
-            children
-                .spawn(collector_collider_element.clone())
-                .insert(Transform {
+            children.spawn((
+                collector_collider_element.clone(),
+                Transform {
                     translation: Vec3::new(-0.04, 0.06, 0.0),
                     rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
                     ..default()
-                });
-            children
-                .spawn(collector_collider_element.clone())
-                .insert(Transform {
+                },
+            ));
+            children.spawn((
+                collector_collider_element.clone(),
+                Transform {
                     translation: Vec3::new(0.04, 0.06, 0.0),
                     rotation: Quat::from_rotation_z(-std::f32::consts::PI / 4.0),
                     ..default()
-                });
-            children
-                .spawn(collector_collider_element.clone())
-                .insert(Transform {
+                },
+            ));
+            children.spawn((
+                collector_collider_element.clone(),
+                Transform {
                     translation: Vec3::new(-0.04, -0.035, 0.0),
                     rotation: Quat::from_rotation_z(-std::f32::consts::PI / 4.0),
                     ..default()
-                });
-            children
-                .spawn(collector_collider_element.clone())
-                .insert(Transform {
+                },
+            ));
+            children.spawn((
+                collector_collider_element.clone(),
+                Transform {
                     translation: Vec3::new(0.04, -0.035, 0.0),
                     rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
                     ..default()
-                });
-        })
-        .insert(CollisionGroups {
-            memberships: Group::GROUP_2,
-            filters: Group::GROUP_3,
-        })
-        .insert(common::board_transform(Transform {
-            translation: Vec3::new(
-                collector_collider_position.x,
-                collector_collider_position.y,
-                collector_collider_position.z,
-            ),
-            //rotation: Quat::from_rotation_z(-1.1),
-            ..default()
-        }))
-        .insert(common::DespawnInEndGame);
+                },
+            ));
+        });
 
-    //spwan one way lid on ball_collector_box, so that balls will stay inside box.
-    commands
-        .spawn(RigidBody::Fixed)
-        .insert(Collider::cuboid(0.07, 0.07, 0.001))
-        .insert(CollisionGroups {
+    commands.spawn((
+        RigidBody::Fixed,
+        Collider::cuboid(0.07, 0.07, 0.001),
+        CollisionGroups {
             memberships: Group::GROUP_5,
             filters: Group::GROUP_3,
-        })
-        .insert(common::board_transform(Transform {
+        },
+        common::board_transform(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -147,15 +148,14 @@ fn spawn_star(
             ),
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             ..default()
-        }))
-        .insert(common::DespawnInEndGame);
+        }),
+        common::DespawnInEndGame,
+    ));
 
-    //spawn star_ball_sensor. Used to detect balls arriving in star and spawn new ball in launcher.
-    //  also change group of ball so one way lid does its job.
-    commands
-        .spawn(Sensor)
-        .insert(Collider::cuboid(0.07, 0.07, 0.001))
-        .insert(common::board_transform(Transform {
+    commands.spawn((
+        Sensor,
+        Collider::cuboid(0.07, 0.07, 0.001),
+        common::board_transform(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -163,47 +163,32 @@ fn spawn_star(
             ),
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             ..default()
-        }))
-        .insert(CollectorSensor)
-        .insert(common::DespawnInEndGame);
+        }),
+        CollectorSensor,
+        common::DespawnInEndGame,
+    ));
 
-    //Starramp
     let starramp_height = 0.06;
     let starramp_length = 0.16;
     let starramp_width = 0.1;
     let starramp_position = Vec3::new(-0.1, 0.135, 0.02);
-    let starramp_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(Cuboid::new(
-        starramp_length,
-        starramp_width,
-        starramp_height,
-    )));
-    let starramp_material = materials.add(Color::srgba(1.0, 1.0, 0.0, 0.8));
 
-    commands
-        .spawn((
-            Mesh3d(starramp_mesh_handle),
-            MeshMaterial3d(starramp_material),
-        ))
-        .insert(RigidBody::Fixed)
-        .insert(Collider::cuboid(
-            starramp_length / 2.0,
-            starramp_width / 2.0,
-            starramp_height / 2.0,
-        ))
-        .insert(CollisionGroups {
+    commands.spawn((
+        Mesh3d(meshes.add(Mesh::from(Cuboid::new(starramp_length, starramp_width, starramp_height)))),
+        MeshMaterial3d(materials.add(Color::srgba(1.0, 1.0, 0.0, 0.8))),
+        RigidBody::Fixed,
+        Collider::cuboid(starramp_length / 2.0, starramp_width / 2.0, starramp_height / 2.0),
+        CollisionGroups {
             memberships: Group::GROUP_1,
             filters: Group::GROUP_3,
-        })
-        .insert(common::board_transform(Transform {
-            translation: Vec3::new(
-                starramp_position.x,
-                starramp_position.y,
-                starramp_position.z,
-            ),
+        },
+        common::board_transform(Transform {
+            translation: starramp_position,
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0)
                 * Quat::from_rotation_y(-std::f32::consts::PI / 6.0),
             ..default()
-        }));
+        }),
+    ));
 }
 
 fn handle_star_ball_sensor_events(

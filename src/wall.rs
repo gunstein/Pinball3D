@@ -31,93 +31,77 @@ fn spawn_walls(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    //Floor
-    //Tree in floor background
     let tree_texture_handle = asset_server.load("xmas_tree.png");
     let tree_aspect = 1.8;
-
     let tree_quad_width = 0.5;
     let tree_quad_handle = meshes.add(Mesh::from(Rectangle::from_size(Vec2::new(
         tree_quad_width,
         tree_quad_width * tree_aspect,
     ))));
-
     let tree_texture_material_handle = materials.add(StandardMaterial {
-        base_color_texture: Some(tree_texture_handle.clone()),
+        base_color_texture: Some(tree_texture_handle),
         alpha_mode: AlphaMode::Blend,
         unlit: true,
         ..default()
     });
 
-    //Merry christmas in floor background
     let mxmas_texture_handle = asset_server.load("merry_xmas.png");
-    let mxmas_aspect = 1.0;
-
     let mxmas_quad_width = 0.15;
     let mxmas_quad_handle = meshes.add(Mesh::from(Rectangle::from_size(Vec2::new(
         mxmas_quad_width,
-        mxmas_quad_width * mxmas_aspect,
+        mxmas_quad_width,
     ))));
-
     let mxmas_texture_material_handle = materials.add(StandardMaterial {
-        base_color_texture: Some(mxmas_texture_handle.clone()),
+        base_color_texture: Some(mxmas_texture_handle),
         alpha_mode: AlphaMode::Blend,
         unlit: true,
         ..default()
     });
 
-    let floor_handle: Handle<Mesh> = asset_server.load("floor.glb#Mesh0/Primitive0");
-    let floor_position = Vec3::new(0.0, -0.0, 0.0);
-    let material_floor = materials.add(Color::srgb(0.0, 0.0, 1.0));
     let floor_half_height = 0.01;
 
     commands
         .spawn((
-            Mesh3d(floor_handle.clone()),
-            MeshMaterial3d(material_floor.clone()),
+            Mesh3d(asset_server.load("floor.glb#Mesh0/Primitive0")),
+            MeshMaterial3d(materials.add(Color::srgb(0.0, 0.0, 1.0))),
+            CollisionGroups {
+                memberships: Group::GROUP_1,
+                filters: Group::GROUP_3,
+            },
+            Transform {
+                rotation: Quat::from_rotation_x(0.12),
+                ..default()
+            },
+            Floor,
+            HalfHeight(floor_half_height),
         ))
         .with_children(|children| {
             children.spawn((
-                Mesh3d(tree_quad_handle.clone()),
-                MeshMaterial3d(tree_texture_material_handle.clone()),
+                Mesh3d(tree_quad_handle),
+                MeshMaterial3d(tree_texture_material_handle),
                 Transform::from_xyz(0.0, -0.3, 0.01),
             ));
             children.spawn((
-                Mesh3d(mxmas_quad_handle.clone()),
-                MeshMaterial3d(mxmas_texture_material_handle.clone()),
+                Mesh3d(mxmas_quad_handle),
+                MeshMaterial3d(mxmas_texture_material_handle),
                 Transform::from_xyz(0.0, -0.9, 0.01),
             ));
-        })
-        .insert(CollisionGroups {
-            memberships: Group::GROUP_1,
-            filters: Group::GROUP_3,
-        })
-        .insert(Transform {
-            translation: Vec3::new(floor_position.x, floor_position.y, floor_position.z),
-            rotation: Quat::from_rotation_x(0.12),
-            ..default()
-        })
-        .insert(Floor)
-        .insert(HalfHeight(floor_half_height));
+        });
 
-    commands
-        .spawn(RigidBody::Fixed)
-        .insert(Collider::cuboid(0.4, 0.7, floor_half_height))
-        .insert(CollisionGroups {
+    commands.spawn((
+        RigidBody::Fixed,
+        Collider::cuboid(0.4, 0.7, floor_half_height),
+        CollisionGroups {
             memberships: Group::GROUP_1,
             filters: Group::GROUP_3,
-        })
-        .insert(common::board_transform(Transform {
+        },
+        common::board_transform(Transform {
             translation: Vec3::new(0.0, -0.3, 0.0),
             ..default()
-        }));
+        }),
+    ));
 
     //Outer wall
-    let outer_wall_handle: Handle<Mesh> = asset_server.load("outer_wall.glb#Mesh0/Primitive0");
-    let outer_wall_position = Vec3::new(0.0, 0.0, 0.0);
-    let material_outer_wall = materials.add(Color::srgb(0.0, 1.0, 0.0));
-
-    //Build heights vector for half circle collider
     let mut heights = Vec::new();
     let radius: f32 = 0.36;
     let radius_squared: f32 = radius * radius;
@@ -132,150 +116,96 @@ fn spawn_walls(
 
     commands
         .spawn((
-            Mesh3d(outer_wall_handle.clone()),
-            MeshMaterial3d(material_outer_wall.clone()),
+            Mesh3d(asset_server.load("outer_wall.glb#Mesh0/Primitive0")),
+            MeshMaterial3d(materials.add(Color::srgb(0.0, 1.0, 0.0))),
+            RigidBody::Fixed,
+            CollisionGroups {
+                memberships: Group::GROUP_2,
+                filters: Group::GROUP_3,
+            },
+            common::board_transform(Transform::default()),
         ))
-        .insert(RigidBody::Fixed)
         .with_children(|children| {
-            //Collider half circle wall
-            children
-                .spawn(Collider::heightfield(
-                    heights,
-                    2,
-                    num_cols,
-                    Vec3::new(0.72, 1.0, 0.1),
-                ))
-                .insert(Transform::from_xyz(0.0, -0.01, 0.05));
-
-            //Collider left wall
-            let left_wall_position = Vec3::new(-0.37, -0.51, 0.06);
-            children
-                .spawn(Collider::cuboid(0.01, 0.5, 0.05))
-                .insert(Transform::from_xyz(
-                    left_wall_position.x,
-                    left_wall_position.y,
-                    left_wall_position.z,
-                ));
-
-            //Collider right wall
-            let right_wall_position = Vec3::new(0.37, -0.51, 0.06);
-            children
-                .spawn(Collider::cuboid(0.01, 0.5, 0.05))
-                .insert(Transform::from_xyz(
-                    right_wall_position.x,
-                    right_wall_position.y,
-                    right_wall_position.z,
-                ));
-
-            //Collider sensor bottom wall
-            let bottom_wall_position = Vec3::new(0.0, -1.0, 0.06);
-            children
-                .spawn(Collider::cuboid(0.38, 0.01, 0.05))
-                .insert(Sensor)
-                .insert(Transform::from_xyz(
-                    bottom_wall_position.x,
-                    bottom_wall_position.y,
-                    bottom_wall_position.z,
-                ))
-                .insert(BottomWall);
-        })
-        .insert(CollisionGroups {
-            memberships: Group::GROUP_2,
-            filters: Group::GROUP_3,
-        })
-        .insert(common::board_transform(Transform::from_xyz(
-            outer_wall_position.x,
-            outer_wall_position.y,
-            outer_wall_position.z,
-        )));
+            children.spawn((
+                Collider::heightfield(heights, 2, num_cols, Vec3::new(0.72, 1.0, 0.1)),
+                Transform::from_xyz(0.0, -0.01, 0.05),
+            ));
+            children.spawn((
+                Collider::cuboid(0.01, 0.5, 0.05),
+                Transform::from_xyz(-0.37, -0.51, 0.06),
+            ));
+            children.spawn((
+                Collider::cuboid(0.01, 0.5, 0.05),
+                Transform::from_xyz(0.37, -0.51, 0.06),
+            ));
+            children.spawn((
+                Collider::cuboid(0.38, 0.01, 0.05),
+                Sensor,
+                Transform::from_xyz(0.0, -1.0, 0.06),
+                BottomWall,
+            ));
+        });
 
     //Left flipper wall
-    let left_flipper_wall_mesh_handle: Handle<Mesh> =
-        meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.14 * 2.0, 0.05 * 2.0)));
-    let left_flipper_wall_position = Vec3::new(-0.24, -0.72, 0.06);
     let material_flipper_wall = materials.add(Color::srgb(0.0, 1.0, 1.0));
 
-    commands
-        .spawn((
-            Mesh3d(left_flipper_wall_mesh_handle.clone()),
-            MeshMaterial3d(material_flipper_wall.clone()),
-        ))
-        .insert(RigidBody::Fixed)
-        .insert(Collider::cuboid(0.01, 0.14, 0.05))
-        .insert(CollisionGroups {
+    commands.spawn((
+        Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.14 * 2.0, 0.05 * 2.0)))),
+        MeshMaterial3d(material_flipper_wall.clone()),
+        RigidBody::Fixed,
+        Collider::cuboid(0.01, 0.14, 0.05),
+        CollisionGroups {
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
-        })
-        .insert(common::board_transform(Transform {
-            translation: Vec3::new(
-                left_flipper_wall_position.x,
-                left_flipper_wall_position.y,
-                left_flipper_wall_position.z,
-            ),
+        },
+        common::board_transform(Transform {
+            translation: Vec3::new(-0.24, -0.72, 0.06),
             rotation: Quat::from_rotation_z(1.1),
             ..default()
-        }));
+        }),
+    ));
 
     //Right flipper wall
-    let right_flipper_wall_mesh_handle: Handle<Mesh> =
-        meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.1 * 2.0, 0.05 * 2.0)));
-    let right_flipper_wall_position = Vec3::new(0.2, -0.74, 0.06);
-
-    commands
-        .spawn((
-            Mesh3d(right_flipper_wall_mesh_handle.clone()),
-            MeshMaterial3d(material_flipper_wall.clone()),
-        ))
-        .insert(RigidBody::Fixed)
-        .insert(Collider::cuboid(0.01, 0.1, 0.05))
-        .insert(CollisionGroups {
+    commands.spawn((
+        Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.1 * 2.0, 0.05 * 2.0)))),
+        MeshMaterial3d(material_flipper_wall),
+        RigidBody::Fixed,
+        Collider::cuboid(0.01, 0.1, 0.05),
+        CollisionGroups {
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
-        })
-        .insert(common::board_transform(Transform {
-            translation: Vec3::new(
-                right_flipper_wall_position.x,
-                right_flipper_wall_position.y,
-                right_flipper_wall_position.z,
-            ),
+        },
+        common::board_transform(Transform {
+            translation: Vec3::new(0.2, -0.74, 0.06),
             rotation: Quat::from_rotation_z(-1.1),
             ..default()
-        }));
+        }),
+    ));
 
     //Launcher wall
-    let launcher_wall_mesh_handle: Handle<Mesh> =
-        meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.28 * 2.0, 0.05 * 2.0)));
-    let launcher_wall_position = Vec3::new(0.3, -0.71, 0.06);
-    let material_launcher_wall = materials.add(Color::srgba(0.0, 1.0, 1.0, 0.5)); //Cyan
-
     commands
         .spawn((
-            Mesh3d(launcher_wall_mesh_handle.clone()),
-            MeshMaterial3d(material_launcher_wall.clone()),
+            Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.28 * 2.0, 0.05 * 2.0)))),
+            MeshMaterial3d(materials.add(Color::srgba(0.0, 1.0, 1.0, 0.5))),
+            RigidBody::Fixed,
+            CollisionGroups {
+                memberships: Group::GROUP_2,
+                filters: Group::GROUP_3,
+            },
+            common::board_transform(Transform {
+                translation: Vec3::new(0.3, -0.71, 0.06),
+                ..default()
+            }),
         ))
-        .insert(RigidBody::Fixed)
         .with_children(|children| {
             children.spawn(Collider::cuboid(0.01, 0.28, 0.05));
-
-            //small cylinder on top of wall to avoid ball getting stuck.
-            children
-                .spawn(Collider::cylinder(0.05, 0.01))
-                .insert(Transform {
+            children.spawn((
+                Collider::cylinder(0.05, 0.01),
+                Transform {
                     translation: Vec3::new(0.0, 0.28, 0.0),
                     rotation: Quat::from_rotation_x(std::f32::consts::PI / 2.0),
                     ..default()
-                });
-        })
-        .insert(CollisionGroups {
-            memberships: Group::GROUP_2,
-            filters: Group::GROUP_3,
-        })
-        .insert(common::board_transform(Transform {
-            translation: Vec3::new(
-                launcher_wall_position.x,
-                launcher_wall_position.y,
-                launcher_wall_position.z,
-            ),
-            ..default()
-        }));
+                },
+            ));
+        });
 }

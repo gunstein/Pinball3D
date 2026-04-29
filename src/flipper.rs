@@ -36,9 +36,9 @@ fn spawn_flippers(
     for half_height in query_floors.iter() {
         floor_half_height = half_height.0;
     }
+
     let left_flipper_mesh_handle: Handle<Mesh> =
         asset_server.load("left_flipper.glb#Mesh0/Primitive0");
-
     let material = materials.add(Color::srgb(1.0, 1.0, 0.0));
 
     let left_flipper_position = Vec3::new(-0.1, -0.8, 0.01);
@@ -57,99 +57,67 @@ fn spawn_flippers(
     let position_lower_box = Vec3::new(0.033, -0.006, flipper_half_height + floor_half_height);
     let rotation_lower_box = Quat::from_rotation_z(0.12);
 
-    commands
-        .spawn((
-            Mesh3d(left_flipper_mesh_handle.clone()),
-            MeshMaterial3d(material.clone()),
-        ))
-        .insert(RigidBody::KinematicPositionBased)
-        .insert(Sleeping::disabled())
-        .insert(Ccd::enabled())
-        .insert(Friction {
-            coefficient: 0.7,
-            combine_rule: CoefficientCombineRule::Min,
-        })
-        .insert(Collider::compound(vec![
-            (
-                position_small_cylinder,
-                rotation_small_cylinder,
-                collider_small_cylinder.clone(),
-            ),
-            (
-                position_upper_box,
-                rotation_upper_box,
-                collider_upper_box.clone(),
-            ),
-        ]))
-        .insert(CollisionGroups {
-            memberships: Group::GROUP_2,
-            filters: Group::GROUP_3,
-        })
-        .insert(common::board_transform(Transform::from_xyz(
-            left_flipper_position.x,
-            left_flipper_position.y,
-            left_flipper_position.z,
-        )))
-        .insert(LeftFlipper {
-            curr_angle: 0.0,
-            base_rotation: common::board_transform(Transform::from_xyz(
-                left_flipper_position.x,
-                left_flipper_position.y,
-                left_flipper_position.z,
-            ))
-            .rotation,
-        });
+    let left_transform = common::board_transform(Transform::from_xyz(
+        left_flipper_position.x,
+        left_flipper_position.y,
+        left_flipper_position.z,
+    ));
 
-    commands
-        .spawn((
-            Mesh3d(left_flipper_mesh_handle.clone()),
-            MeshMaterial3d(material.clone()),
-        ))
-        .insert(RigidBody::KinematicPositionBased)
-        .insert(Sleeping::disabled())
-        .insert(Ccd::enabled())
-        .insert(Friction {
+    commands.spawn((
+        Mesh3d(left_flipper_mesh_handle.clone()),
+        MeshMaterial3d(material.clone()),
+        RigidBody::KinematicPositionBased,
+        Sleeping::disabled(),
+        Ccd::enabled(),
+        Friction {
             coefficient: 0.7,
             combine_rule: CoefficientCombineRule::Min,
-        })
-        .insert(Collider::compound(vec![
-            (
-                position_small_cylinder,
-                rotation_small_cylinder,
-                collider_small_cylinder.clone(),
-            ),
-            (
-                position_lower_box,
-                rotation_lower_box,
-                collider_lower_box.clone(),
-            ),
-        ]))
-        .insert(common::board_transform(Transform {
-            translation: Vec3::new(
-                right_flipper_position.x,
-                right_flipper_position.y,
-                right_flipper_position.z,
-            ),
-            rotation: Quat::from_rotation_z(-std::f32::consts::PI),
-            ..default()
-        }))
-        .insert(CollisionGroups {
+        },
+        Collider::compound(vec![
+            (position_small_cylinder, rotation_small_cylinder, collider_small_cylinder.clone()),
+            (position_upper_box, rotation_upper_box, collider_upper_box.clone()),
+        ]),
+        CollisionGroups {
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
-        })
-        .insert(RightFlipper {
+        },
+        left_transform,
+        LeftFlipper {
             curr_angle: 0.0,
-            base_rotation: common::board_transform(Transform {
-                translation: Vec3::new(
-                    right_flipper_position.x,
-                    right_flipper_position.y,
-                    right_flipper_position.z,
-                ),
-                rotation: Quat::from_rotation_z(-std::f32::consts::PI),
-                ..default()
-            })
-            .rotation,
-        });
+            base_rotation: left_transform.rotation,
+        },
+    ));
+
+    let right_transform = common::board_transform(Transform {
+        translation: right_flipper_position,
+        rotation: Quat::from_rotation_z(-std::f32::consts::PI),
+        ..default()
+    });
+
+    commands.spawn((
+        Mesh3d(left_flipper_mesh_handle.clone()),
+        MeshMaterial3d(material.clone()),
+        RigidBody::KinematicPositionBased,
+        Sleeping::disabled(),
+        Ccd::enabled(),
+        Friction {
+            coefficient: 0.7,
+            combine_rule: CoefficientCombineRule::Min,
+        },
+        Collider::compound(vec![
+            (position_small_cylinder, rotation_small_cylinder, collider_small_cylinder.clone()),
+            (position_lower_box, rotation_lower_box, collider_lower_box.clone()),
+        ]),
+        CollisionGroups {
+            memberships: Group::GROUP_2,
+            filters: Group::GROUP_3,
+        },
+        right_transform,
+        RightFlipper {
+            curr_angle: 0.0,
+            base_rotation: right_transform.rotation,
+        },
+    ));
 }
 
 fn left_flipper_movement(
@@ -158,15 +126,13 @@ fn left_flipper_movement(
 ) {
     for (mut left_flipper, mut left_flipper_transform) in left_flippers.iter_mut() {
         let mut new_angle = left_flipper.curr_angle;
-        let change_angle: f32;
 
         if keyboard_input.pressed(KeyCode::ArrowLeft) {
-            change_angle = 0.3;
+            new_angle += 0.3;
         } else {
-            change_angle = -0.07;
+            new_angle -= 0.07;
         }
 
-        new_angle += change_angle;
         let new_clamped_angle = new_angle.clamp(-0.3, 0.3);
         left_flipper_transform.rotation =
             left_flipper.base_rotation * Quat::from_rotation_z(new_clamped_angle);
@@ -180,15 +146,13 @@ fn right_flipper_movement(
 ) {
     for (mut right_flipper, mut right_flipper_transform) in right_flippers.iter_mut() {
         let mut new_angle = right_flipper.curr_angle;
-        let change_angle: f32;
 
         if keyboard_input.pressed(KeyCode::ArrowRight) {
-            change_angle = -0.3;
+            new_angle -= 0.3;
         } else {
-            change_angle = 0.07;
+            new_angle += 0.07;
         }
 
-        new_angle += change_angle;
         let new_clamped_angle = new_angle.clamp(-0.3, 0.3);
         right_flipper_transform.rotation =
             right_flipper.base_rotation * Quat::from_rotation_z(new_clamped_angle);
