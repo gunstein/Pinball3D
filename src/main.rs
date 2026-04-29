@@ -33,8 +33,6 @@ mod common;
 pub enum Pinball3DSystems {
     Main,
     Walls,
-    Flippers,
-    Ball,
 }
 
 fn main() {

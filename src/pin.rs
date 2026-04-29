@@ -1,5 +1,3 @@
-use std::ops::Add;
-
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
@@ -7,7 +5,6 @@ use rand::Rng;
 
 use super::common;
 use super::Ball;
-use super::Floor;
 
 pub struct PinPlugin;
 
@@ -25,7 +22,6 @@ fn spawn_pins(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    query_floors: Query<Entity, With<Floor>>,
 ) {
     let pins_pos: [Vec3; 10] = [
         Vec3::new(0.0, 0.07, 0.05),
@@ -40,17 +36,8 @@ fn spawn_pins(
         Vec3::new(0.0, -0.44, 0.05),
     ];
 
-    for i in 0..pins_pos.len() {
-        let pin_pos = pins_pos[i];
-
-        spawn_single_pin(
-            &mut commands,
-            pin_pos,
-            None,
-            &mut meshes,
-            &mut materials,
-            &query_floors,
-        );
+    for pin_pos in pins_pos {
+        spawn_single_pin(&mut commands, pin_pos, None, &mut meshes, &mut materials);
     }
 }
 
@@ -60,42 +47,30 @@ fn spawn_single_pin(
     color: Option<Color>,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
-    query_floors: &Query<Entity, With<Floor>>,
 ) {
-    let mut floor = None;
-    for entity in query_floors.iter() {
-        floor = Some(entity);
-    }
-
     let pin_radius = 0.035;
     let pin_depth = 0.05;
     let pin_mesh_handle: Handle<Mesh> =
         meshes.add(Mesh::from(Capsule3d::new(pin_radius, pin_depth)));
 
-    let mut chosen_color = Color::srgb(0.0, 0.5, 0.5);
-    if color.is_some() {
-        chosen_color = color.unwrap();
-    }
+    let chosen_color = color.unwrap_or(Color::srgb(0.0, 0.5, 0.5));
 
     let material_pin = materials.add(chosen_color);
 
-    let pin = commands
+    commands
         .spawn((
-            Mesh3d(pin_mesh_handle.clone()),
-            MeshMaterial3d(material_pin.clone()),
-        ))
-        .insert(RigidBody::Fixed)
-        .insert(Collider::round_cylinder(pin_depth, pin_radius, 0.001))
-        .insert(common::board_transform(Transform {
-            translation: Vec3::new(position.x, position.y, position.z),
-            rotation: Quat::from_rotation_x(std::f32::consts::PI / 2.0),
-            ..default()
-        }))
-        .insert(Restitution::coefficient(0.7))
-        .insert(Pin)
-        .id();
-
-    let _ = (floor, pin);
+            Mesh3d(pin_mesh_handle),
+            MeshMaterial3d(material_pin),
+            RigidBody::Fixed,
+            Collider::round_cylinder(pin_depth, pin_radius, 0.001),
+            common::board_transform(Transform {
+                translation: position,
+                rotation: Quat::from_rotation_x(std::f32::consts::PI / 2.0),
+                ..default()
+            }),
+            Restitution::coefficient(0.7),
+            Pin,
+        ));
 }
 
 fn handle_pin_events(
@@ -127,9 +102,7 @@ fn handle_pin_events(
                     //Give ball a push in velocity direction
                     for (entity_ball, mut external_impulse, velocity) in query_balls.iter_mut() {
                         if h1 == &entity_ball || h2 == &entity_ball {
-                            let normalized_velocity = velocity.linvel.normalize();
-                            external_impulse.impulse =
-                                external_impulse.impulse.add(normalized_velocity * 0.000003);
+                            external_impulse.impulse += velocity.linvel.normalize() * 0.000003;
                         }
                     }
                 }

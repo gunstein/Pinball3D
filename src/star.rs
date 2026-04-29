@@ -35,44 +35,42 @@ fn spawn_star(
     mut materials: ResMut<Assets<StandardMaterial>>,
     query_floors: Query<(Entity, &HalfHeight), With<Floor>>,
 ) {
-    let init_star_bumpers: [bumper::BumperBundle; 4] = [
-        bumper::BumperBundle {
-            position: common::Position(Vec3::new(-0.06, 0.3, 0.0)),
-            rotation: common::Rotation(Quat::from_rotation_z(std::f32::consts::PI / 4.0)),
+    let init_star_bumpers: [bumper::BumperConfig; 4] = [
+        bumper::BumperConfig {
+            position: Vec3::new(-0.06, 0.3, 0.0),
+            rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             dark_color: bumper::DarkColor(Color::srgb(1.0, 1.0, 0.0)),
             light_color: bumper::LightColor(Color::srgb(0.98, 0.922, 0.843)),
             despawn_in_endgame: false,
         },
-        bumper::BumperBundle {
-            position: common::Position(Vec3::new(0.06, 0.3, 0.0)),
-            rotation: common::Rotation(Quat::from_rotation_z(-std::f32::consts::PI / 4.0)),
+        bumper::BumperConfig {
+            position: Vec3::new(0.06, 0.3, 0.0),
+            rotation: Quat::from_rotation_z(-std::f32::consts::PI / 4.0),
             dark_color: bumper::DarkColor(Color::srgb(1.0, 1.0, 0.0)),
             light_color: bumper::LightColor(Color::srgb(0.98, 0.922, 0.843)),
             despawn_in_endgame: false,
         },
-        bumper::BumperBundle {
-            position: common::Position(Vec3::new(0.06, 0.19, 0.0)),
-            rotation: common::Rotation(Quat::from_rotation_z(std::f32::consts::PI / 4.0)),
+        bumper::BumperConfig {
+            position: Vec3::new(0.06, 0.19, 0.0),
+            rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             dark_color: bumper::DarkColor(Color::srgb(1.0, 1.0, 0.0)),
             light_color: bumper::LightColor(Color::srgb(0.98, 0.922, 0.843)),
             despawn_in_endgame: true,
         },
-        bumper::BumperBundle {
-            position: common::Position(Vec3::new(-0.06, 0.19, -0.025)),
-            rotation: common::Rotation(Quat::from_rotation_z(-std::f32::consts::PI / 4.0)),
+        bumper::BumperConfig {
+            position: Vec3::new(-0.06, 0.19, -0.025),
+            rotation: Quat::from_rotation_z(-std::f32::consts::PI / 4.0),
             dark_color: bumper::DarkColor(Color::srgb(1.0, 1.0, 0.0)),
             light_color: bumper::LightColor(Color::srgb(0.98, 0.922, 0.843)),
             despawn_in_endgame: false,
         },
     ];
 
-    for i in 0..init_star_bumpers.len() {
-        let init_bumper = &init_star_bumpers[i];
-
+    for init_bumper in &init_star_bumpers {
         bumper::spawn_single_bumper(
             &mut commands,
-            &init_bumper.position,
-            &init_bumper.rotation,
+            init_bumper.position,
+            init_bumper.rotation,
             None,
             &init_bumper.dark_color,
             &init_bumper.light_color,
@@ -299,7 +297,7 @@ fn despawn_collector_when_endgame(
     mut done: Local<bool>,
 ) {
     if !*done {
-        if end_game.0 == true {
+        if end_game.0 {
             //  Despawn collector, lid, sensor and right-down bumper.
             for entity_to_despawn in query_despawn_entities.iter() {
                 commands.entity(entity_to_despawn).despawn();

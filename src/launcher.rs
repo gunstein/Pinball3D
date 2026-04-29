@@ -3,7 +3,6 @@ use bevy_rapier3d::prelude::*;
 
 use super::common;
 use super::Ball;
-use super::Floor;
 pub struct LauncherPlugin;
 
 impl Plugin for LauncherPlugin {
@@ -25,19 +24,13 @@ fn spawn_launcher_and_gate(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    query_floors: Query<Entity, With<Floor>>,
 ) {
-    let mut floor = None;
-    for entity in query_floors.iter() {
-        floor = Some(entity);
-    }
-
     let launcher_pos = Vec3::new(0.34, -0.95, 0.03);
     let launcher_mesh_handle: Handle<Mesh> =
         meshes.add(Mesh::from(Cuboid::new(0.02 * 2.0, 0.02 * 2.0, 0.02 * 2.0)));
     let material_launcher = materials.add(Color::srgb(1.0, 1.0, 0.0));
 
-    let launcher = commands
+    commands
         .spawn((
             Mesh3d(launcher_mesh_handle.clone()),
             MeshMaterial3d(material_launcher.clone()),
@@ -57,8 +50,7 @@ fn spawn_launcher_and_gate(
         )))
         .insert(Launcher {
             start_pos: launcher_pos,
-        })
-        .id();
+        });
 
     //Launcher gate
     //Add launcher gate, connected with joints between outer_wall and launcher_wall
@@ -85,7 +77,7 @@ fn spawn_launcher_and_gate(
         .local_anchor1(Vec3::new(0.015, 0.0, 0.0)) //pos in local coordinates of joint
         .local_anchor2(Vec3::new(-0.017, 0.0, 0.04)); //pos in local coordinates of gate
 
-    let launcher_gate = commands
+    commands
         .spawn((
             Mesh3d(launcher_gate_mesh_handle.clone()),
             MeshMaterial3d(material_launcher_gate.clone()),
@@ -109,12 +101,11 @@ fn spawn_launcher_and_gate(
                 gate_anchor_pos.z - 0.04,
             ),
             ..default()
-        }))
-        .id();
+        }));
 
     //one way gate collider, used to prevent stuck ball.
     let gate_collider_pos = Vec3::new(0.33, -0.41, 0.05);
-    let gate_collider = commands
+    commands
         .spawn(RigidBody::Fixed)
         .insert(Collider::cuboid(0.03, 0.003, 0.04))
         .insert(CollisionGroups {
@@ -129,12 +120,11 @@ fn spawn_launcher_and_gate(
             ),
             rotation: Quat::from_rotation_z(0.1),
             ..default()
-        }))
-        .id();
+        }));
 
     //Sensor above gate. Used to change collider group of ball
     let gate_sensor_position = Vec3::new(0.33, -0.39, 0.05);
-    let gate_sensor = commands
+    commands
         .spawn(Collider::cuboid(0.03, 0.003, 0.04))
         .insert(Sensor)
         .insert(common::board_transform(Transform::from_xyz(
@@ -142,17 +132,7 @@ fn spawn_launcher_and_gate(
             gate_sensor_position.y,
             gate_sensor_position.z,
         )))
-        .insert(GateSensor)
-        .id();
-
-    let _ = (
-        floor,
-        launcher,
-        gate_anchor,
-        launcher_gate,
-        gate_sensor,
-        gate_collider,
-    );
+        .insert(GateSensor);
 }
 
 fn launcher_movement(

@@ -78,18 +78,9 @@ pub fn spawn_single_ball(
         .insert(common::board_transform(Transform::from_xyz(
             position.x, position.y, position.z,
         )))
-        .insert(ExternalForce {
-            force: Vec3::new(0.0, 0.0, 0.0),
-            torque: Vec3::new(0.0, 0.0, 0.0),
-        })
-        .insert(ExternalImpulse {
-            impulse: Vec3::new(0.0, 0.0, 0.0),
-            torque_impulse: Vec3::new(0.0, 0.0, 0.0),
-        })
-        .insert(Velocity {
-            linvel: Vec3::new(0.0, 0.0, 0.0),
-            angvel: Vec3::new(0.0, 0.0, 0.0),
-        })
+        .insert(ExternalForce::default())
+        .insert(ExternalImpulse::default())
+        .insert(Velocity::default())
         .insert(ActiveEvents::COLLISION_EVENTS)
         .insert(Restitution::coefficient(0.6))
         .insert(CollisionGroups {
@@ -157,7 +148,7 @@ fn handle_ball_intersections_with_bottom_wall(
             /* Find the intersection pair, if it exists, between two colliders. */
             if rapier_context.intersection_pair(entity_bottom_wall, entity_ball) == Some(true) {
                 commands.entity(entity_ball).despawn();
-                if end_game.0 == false {
+                if !end_game.0 {
                     spawn_single_ball(
                         &mut commands,
                         &mut meshes,

@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use std::ops::Add;
 
 use super::Ball;
 use super::Floor;
@@ -24,10 +23,8 @@ fn spawn_target(
     mut materials: ResMut<Assets<StandardMaterial>>,
     query_floors: Query<(Entity, &HalfHeight), With<Floor>>,
 ) {
-    let mut floor = None;
     let mut floor_half_height = 0.0;
-    for (entity, half_height) in query_floors.iter() {
-        floor = Some(entity);
+    for (_entity, half_height) in query_floors.iter() {
         floor_half_height = half_height.0;
     }
 
@@ -46,30 +43,23 @@ fn spawn_target(
 
     let material_target = materials.add(Color::srgb(0.93, 0.51, 0.93));
 
-    let target = commands
+    commands
         .spawn((
-            Mesh3d(target_mesh_handle.clone()),
-            MeshMaterial3d(material_target.clone()),
-        ))
-        .insert(RigidBody::Fixed)
-        .insert(Collider::cuboid(
-            target_length / 2.0,
-            target_width / 2.0,
-            target_height / 2.0,
-        ))
-        .insert(super::common::board_transform(Transform {
-            translation: Vec3::new(
-                target_position.x,
-                target_position.y,
-                target_position.z + target_height / 2.0 + floor_half_height,
-            ),
-            rotation: target_rotation,
-            ..default()
-        }))
-        .insert(Target)
-        .id();
-
-    let _ = (floor, target);
+            Mesh3d(target_mesh_handle),
+            MeshMaterial3d(material_target),
+            RigidBody::Fixed,
+            Collider::cuboid(target_length / 2.0, target_width / 2.0, target_height / 2.0),
+            super::common::board_transform(Transform {
+                translation: Vec3::new(
+                    target_position.x,
+                    target_position.y,
+                    target_position.z + target_height / 2.0 + floor_half_height,
+                ),
+                rotation: target_rotation,
+                ..default()
+            }),
+            Target,
+        ));
 }
 
 fn handle_target_events(
@@ -85,10 +75,8 @@ fn handle_target_events(
                     for (entity_ball, mut external_impulse, mut velocity) in query_balls.iter_mut()
                     {
                         if h1 == &entity_ball || h2 == &entity_ball {
-                            velocity.linvel = Vec3::new(0.0, 0.0, 0.0);
-                            external_impulse.impulse = external_impulse
-                                .impulse
-                                .add(Vec3::new(1.0, 1.0, 0.0) * 0.000013);
+                            velocity.linvel = Vec3::ZERO;
+                            external_impulse.impulse += Vec3::new(1.0, 1.0, 0.0) * 0.000013;
                         }
                     }
                 }

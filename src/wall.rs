@@ -71,7 +71,7 @@ fn spawn_walls(
     let material_floor = materials.add(Color::srgb(0.0, 0.0, 1.0));
     let floor_half_height = 0.01;
 
-    let floor = commands
+    commands
         .spawn((
             Mesh3d(floor_handle.clone()),
             MeshMaterial3d(material_floor.clone()),
@@ -98,10 +98,9 @@ fn spawn_walls(
             ..default()
         })
         .insert(Floor)
-        .insert(HalfHeight(floor_half_height))
-        .id();
+        .insert(HalfHeight(floor_half_height));
 
-    let floor_collider = commands
+    commands
         .spawn(RigidBody::Fixed)
         .insert(Collider::cuboid(0.4, 0.7, floor_half_height))
         .insert(CollisionGroups {
@@ -111,8 +110,7 @@ fn spawn_walls(
         .insert(common::board_transform(Transform {
             translation: Vec3::new(0.0, -0.3, 0.0),
             ..default()
-        }))
-        .id();
+        }));
 
     //Outer wall
     let outer_wall_handle: Handle<Mesh> = asset_server.load("outer_wall.glb#Mesh0/Primitive0");
@@ -132,7 +130,7 @@ fn spawn_walls(
         heights.push(y);
     }
 
-    let outer_wall = commands
+    commands
         .spawn((
             Mesh3d(outer_wall_handle.clone()),
             MeshMaterial3d(material_outer_wall.clone()),
@@ -189,8 +187,7 @@ fn spawn_walls(
             outer_wall_position.x,
             outer_wall_position.y,
             outer_wall_position.z,
-        )))
-        .id();
+        )));
 
     //Left flipper wall
     let left_flipper_wall_mesh_handle: Handle<Mesh> =
@@ -198,7 +195,7 @@ fn spawn_walls(
     let left_flipper_wall_position = Vec3::new(-0.24, -0.72, 0.06);
     let material_flipper_wall = materials.add(Color::srgb(0.0, 1.0, 1.0));
 
-    let left_flipper_wall = commands
+    commands
         .spawn((
             Mesh3d(left_flipper_wall_mesh_handle.clone()),
             MeshMaterial3d(material_flipper_wall.clone()),
@@ -217,15 +214,14 @@ fn spawn_walls(
             ),
             rotation: Quat::from_rotation_z(1.1),
             ..default()
-        }))
-        .id();
+        }));
 
     //Right flipper wall
     let right_flipper_wall_mesh_handle: Handle<Mesh> =
         meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.1 * 2.0, 0.05 * 2.0)));
     let right_flipper_wall_position = Vec3::new(0.2, -0.74, 0.06);
 
-    let right_flipper_wall = commands
+    commands
         .spawn((
             Mesh3d(right_flipper_wall_mesh_handle.clone()),
             MeshMaterial3d(material_flipper_wall.clone()),
@@ -244,8 +240,7 @@ fn spawn_walls(
             ),
             rotation: Quat::from_rotation_z(-1.1),
             ..default()
-        }))
-        .id();
+        }));
 
     //Launcher wall
     let launcher_wall_mesh_handle: Handle<Mesh> =
@@ -253,7 +248,7 @@ fn spawn_walls(
     let launcher_wall_position = Vec3::new(0.3, -0.71, 0.06);
     let material_launcher_wall = materials.add(Color::srgba(0.0, 1.0, 1.0, 0.5)); //Cyan
 
-    let launcher_wall = commands
+    commands
         .spawn((
             Mesh3d(launcher_wall_mesh_handle.clone()),
             MeshMaterial3d(material_launcher_wall.clone()),
@@ -282,15 +277,5 @@ fn spawn_walls(
                 launcher_wall_position.z,
             ),
             ..default()
-        }))
-        .id();
-
-    let _ = (
-        floor,
-        floor_collider,
-        outer_wall,
-        left_flipper_wall,
-        right_flipper_wall,
-        launcher_wall,
-    );
+        }));
 }
