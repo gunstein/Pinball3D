@@ -26,7 +26,7 @@ impl Plugin for StarPlugin {
     }
 }
 
-#[derive(Default, Component)]
+#[derive(Component)]
 struct CollectorSensor;
 
 fn spawn_star(
@@ -66,19 +66,8 @@ fn spawn_star(
         },
     ];
 
-    for init_bumper in &init_star_bumpers {
-        bumper::spawn_single_bumper(
-            &mut commands,
-            init_bumper.position,
-            init_bumper.rotation,
-            None,
-            &init_bumper.dark_color,
-            &init_bumper.light_color,
-            &mut meshes,
-            &mut materials,
-            &query_floors,
-            init_bumper.despawn_in_endgame,
-        );
+    for config in &init_star_bumpers {
+        bumper::spawn_single_bumper(&mut commands, config, &mut meshes, &mut materials, &query_floors);
     }
 
     //spawn ball_collector_collider_box
@@ -233,8 +222,8 @@ fn handle_star_ball_sensor_events(
                             &mut commands,
                             &mut meshes,
                             &mut materials,
-                            &ball::INIT_BALL_POSITION,
-                            &ball::MaterialColor(color_selection[chosen_index].into()),
+                            ball::INIT_BALL_POSITION,
+                            ball::MaterialColor(color_selection[chosen_index]),
                         );
 
                         //If five balls in collector. Let end_game begin.
@@ -264,19 +253,13 @@ fn despawn_collector_when_endgame(
     end_game: Res<common::EndGame>,
     mut done: Local<bool>,
 ) {
-    if !*done {
-        if end_game.0 {
-            //  Despawn collector, lid, sensor and right-down bumper.
-            for entity_to_despawn in query_despawn_entities.iter() {
-                commands.entity(entity_to_despawn).despawn();
-            }
-            // remove GROUP_5 on all balls
-            for (_entity_ball, mut collision_group) in query_balls.iter_mut() {
-                //Remove GROUP_5 from filter
-                collision_group.filters ^= Group::GROUP_5;
-            }
-
-            *done = true;
+    if !*done && end_game.0 {
+        for entity_to_despawn in query_despawn_entities.iter() {
+            commands.entity(entity_to_despawn).despawn();
         }
+        for (_entity_ball, mut collision_group) in query_balls.iter_mut() {
+            collision_group.filters ^= Group::GROUP_5;
+        }
+        *done = true;
     }
 }

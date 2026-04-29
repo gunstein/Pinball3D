@@ -16,7 +16,7 @@ impl Plugin for BumperPlugin {
     }
 }
 
-#[derive(Default, Component)]
+#[derive(Component)]
 struct Bumper;
 
 #[derive(Default, Component)]
@@ -59,33 +59,17 @@ fn spawn_bumpers(
         },
     ];
 
-    for init_bumper in &init_bumpers {
-        spawn_single_bumper(
-            &mut commands,
-            init_bumper.position,
-            init_bumper.rotation,
-            None,
-            &init_bumper.dark_color,
-            &init_bumper.light_color,
-            &mut meshes,
-            &mut materials,
-            &query_floors,
-            init_bumper.despawn_in_endgame,
-        );
+    for config in &init_bumpers {
+        spawn_single_bumper(&mut commands, config, &mut meshes, &mut materials, &query_floors);
     }
 }
 
 pub fn spawn_single_bumper(
     commands: &mut Commands,
-    position: Vec3,
-    rotation: Quat,
-    timestamp_last_hit: Option<f64>,
-    dark_color: &DarkColor,
-    light_color: &LightColor,
+    config: &BumperConfig,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     query_floors: &Query<&HalfHeight, With<Floor>>,
-    add_despawn_in_endgame: bool,
 ) {
     let mut floor_half_height = 0.0;
     for half_height in query_floors.iter() {
@@ -95,45 +79,31 @@ pub fn spawn_single_bumper(
     let bumper_height = 0.1;
     let bumper_length = 0.17;
     let bumper_width = 0.02;
-    let bumper_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(Cuboid::new(
-        bumper_length,
-        bumper_width,
-        bumper_height,
-    )));
-
-    let temp_timestamp_last_hit = timestamp_last_hit.unwrap_or(0.0);
-
-    let mut color = light_color.0;
-    if temp_timestamp_last_hit == 0.0 {
-        color = dark_color.0;
-    }
-
-    let material_bumper = materials.add(color);
 
     let bumper = commands
         .spawn((
-            Mesh3d(bumper_mesh_handle),
-            MeshMaterial3d(material_bumper),
+            Mesh3d(meshes.add(Mesh::from(Cuboid::new(bumper_length, bumper_width, bumper_height)))),
+            MeshMaterial3d(materials.add(config.dark_color.0)),
             common::board_transform(Transform {
                 translation: Vec3::new(
-                    position.x,
-                    position.y,
-                    position.z + bumper_height / 2.0 + floor_half_height,
+                    config.position.x,
+                    config.position.y,
+                    config.position.z + bumper_height / 2.0 + floor_half_height,
                 ),
-                rotation,
+                rotation: config.rotation,
                 ..default()
             }),
             RigidBody::Fixed,
             Collider::cuboid(bumper_length / 2.0, bumper_width / 2.0, bumper_height / 2.0),
             Restitution::coefficient(0.7),
             Bumper,
-            TimestampLastHit(temp_timestamp_last_hit),
-            DarkColor(dark_color.0),
-            LightColor(light_color.0),
+            TimestampLastHit::default(),
+            DarkColor(config.dark_color.0),
+            LightColor(config.light_color.0),
         ))
         .id();
 
-    if add_despawn_in_endgame {
+    if config.despawn_in_endgame {
         commands.entity(bumper).insert(common::DespawnInEndGame);
     }
 }
