@@ -141,7 +141,7 @@ pub fn spawn_single_bumper(
 fn change_bumper_to_dark_color(
     mut query_bumpers: Query<
         (
-            &TimestampLastHit,
+            &mut TimestampLastHit,
             &DarkColor,
             &mut MeshMaterial3d<StandardMaterial>,
         ),
@@ -150,10 +150,11 @@ fn change_bumper_to_dark_color(
     time: Res<Time>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for (timestamp_last_hit, dark_color, mut material) in query_bumpers.iter_mut() {
+    for (mut timestamp_last_hit, dark_color, mut material) in &mut query_bumpers {
         let diff = time.elapsed_secs_f64() - timestamp_last_hit.0;
         if timestamp_last_hit.0 > 0.0 && diff > 1.0 {
             *material = MeshMaterial3d(materials.add(dark_color.0));
+            timestamp_last_hit.0 = 0.0;
         }
     }
 }
