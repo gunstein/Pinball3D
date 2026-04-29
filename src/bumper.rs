@@ -67,8 +67,8 @@ fn spawn_bumpers(
 pub fn spawn_single_bumper(
     commands: &mut Commands,
     config: &BumperConfig,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<StandardMaterial>,
     query_floors: &Query<&HalfHeight, With<Floor>>,
 ) {
     let mut floor_half_height = 0.0;

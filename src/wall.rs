@@ -109,7 +109,7 @@ fn spawn_walls(
     let step_size = (radius * 2.0) / (num_cols as f32 - 1.0);
     for step in 0..num_cols {
         let x = -radius + (step as f32 * step_size);
-        let y = f32::sqrt(radius_squared - (x * x));
+        let y = (radius_squared - x * x).sqrt();
         heights.push(y);
         heights.push(y);
     }

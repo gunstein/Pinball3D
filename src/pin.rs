@@ -45,8 +45,8 @@ fn spawn_single_pin(
     commands: &mut Commands,
     position: Vec3,
     color: Option<Color>,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<StandardMaterial>,
 ) {
     let pin_radius = 0.035;
     let pin_depth = 0.05;

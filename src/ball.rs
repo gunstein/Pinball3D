@@ -42,8 +42,8 @@ fn spawn_balls(
 
 pub fn spawn_single_ball(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<StandardMaterial>,
     position: Vec3,
     material_color: MaterialColor,
 ) {
@@ -70,14 +70,14 @@ pub fn spawn_single_ball(
 }
 
 fn push_ball_to_floor(
-    mut query_balls: Query<(&mut ExternalForce, &mut Velocity, &Transform, &Collider), With<Ball>>,
+    mut query_balls: Query<(&mut ExternalForce, &Transform, &Collider), With<Ball>>,
     rapier_context: ReadRapierContext,
 ) {
     let Ok(rapier_context) = rapier_context.single() else {
         return;
     };
 
-    for (mut ball_force, _ball_velocity, ball_transform, ball_collider) in query_balls.iter_mut() {
+    for (mut ball_force, ball_transform, ball_collider) in query_balls.iter_mut() {
         let filter = QueryFilter {
             groups: Some(
                 CollisionGroups {
