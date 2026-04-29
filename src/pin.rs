@@ -74,13 +74,13 @@ fn spawn_single_pin(
 }
 
 fn handle_pin_events(
-    mut query_pins: Query<(Entity, &Pin, &mut MeshMaterial3d<StandardMaterial>), With<Pin>>,
+    mut query_pins: Query<(Entity, &mut MeshMaterial3d<StandardMaterial>), With<Pin>>,
     mut query_balls: Query<(Entity, &mut ExternalImpulse, &Velocity), With<Ball>>,
     mut contact_events: MessageReader<CollisionEvent>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for contact_event in contact_events.read() {
-        for (entity_pin, _pin, mut material) in query_pins.iter_mut() {
+        for (entity_pin, mut material) in query_pins.iter_mut() {
             if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
                 if h1 == &entity_pin || h2 == &entity_pin {
                     //Respawn to change color

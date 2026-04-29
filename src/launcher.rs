@@ -137,7 +137,7 @@ fn spawn_launcher_and_gate(
 
 fn launcher_movement(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut launchers: Query<(&mut Launcher, &mut Transform), With<Launcher>>,
+    mut launchers: Query<(&mut Launcher, &mut Transform)>,
 ) {
     for (launcher, mut launcher_transform) in launchers.iter_mut() {
         let mut next_ypos = launcher_transform.translation.y;

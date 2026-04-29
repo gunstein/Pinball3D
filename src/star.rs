@@ -33,7 +33,7 @@ fn spawn_star(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    query_floors: Query<(Entity, &HalfHeight), With<Floor>>,
+    query_floors: Query<&HalfHeight, With<Floor>>,
 ) {
     let init_star_bumpers: [bumper::BumperConfig; 4] = [
         bumper::BumperConfig {

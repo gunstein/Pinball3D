@@ -21,10 +21,10 @@ fn spawn_target(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    query_floors: Query<(Entity, &HalfHeight), With<Floor>>,
+    query_floors: Query<&HalfHeight, With<Floor>>,
 ) {
     let mut floor_half_height = 0.0;
-    for (_entity, half_height) in query_floors.iter() {
+    for half_height in query_floors.iter() {
         floor_half_height = half_height.0;
     }
 

@@ -30,10 +30,10 @@ fn spawn_flippers(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    query_floors: Query<(Entity, &HalfHeight), With<Floor>>,
+    query_floors: Query<&HalfHeight, With<Floor>>,
 ) {
     let mut floor_half_height = 0.0;
-    for (_entity, half_height) in query_floors.iter() {
+    for half_height in query_floors.iter() {
         floor_half_height = half_height.0;
     }
     let left_flipper_mesh_handle: Handle<Mesh> =
@@ -154,7 +154,7 @@ fn spawn_flippers(
 
 fn left_flipper_movement(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut left_flippers: Query<(&mut LeftFlipper, &mut Transform), With<LeftFlipper>>,
+    mut left_flippers: Query<(&mut LeftFlipper, &mut Transform)>,
 ) {
     for (mut left_flipper, mut left_flipper_transform) in left_flippers.iter_mut() {
         let mut new_angle = left_flipper.curr_angle;
@@ -176,7 +176,7 @@ fn left_flipper_movement(
 
 fn right_flipper_movement(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut right_flippers: Query<(&mut RightFlipper, &mut Transform), With<RightFlipper>>,
+    mut right_flippers: Query<(&mut RightFlipper, &mut Transform)>,
 ) {
     for (mut right_flipper, mut right_flipper_transform) in right_flippers.iter_mut() {
         let mut new_angle = right_flipper.curr_angle;
