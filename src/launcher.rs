@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
+use super::common;
 use super::Ball;
 use super::Floor;
 pub struct LauncherPlugin;
@@ -49,11 +50,11 @@ fn spawn_launcher_and_gate(
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(Transform::from_xyz(
+        .insert(common::board_transform(Transform::from_xyz(
             launcher_pos.x,
             launcher_pos.y,
             launcher_pos.z,
-        ))
+        )))
         .insert(Launcher {
             start_pos: launcher_pos,
         })
@@ -72,10 +73,10 @@ fn spawn_launcher_and_gate(
 
     let gate_anchor = commands
         .spawn(RigidBody::Fixed)
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z),
             ..default()
-        })
+        }))
         .id();
 
     let joint_axis = Vec3::new(1.0, 0.0, 0.0);
@@ -101,14 +102,14 @@ fn spawn_launcher_and_gate(
                 });
             children.spawn(ImpulseJoint::new(gate_anchor, joint));
         })
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 gate_anchor_pos.x,
                 gate_anchor_pos.y,
                 gate_anchor_pos.z - 0.04,
             ),
             ..default()
-        })
+        }))
         .id();
 
     //one way gate collider, used to prevent stuck ball.
@@ -120,7 +121,7 @@ fn spawn_launcher_and_gate(
             memberships: Group::GROUP_4,
             filters: Group::GROUP_3,
         })
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 gate_collider_pos.x,
                 gate_collider_pos.y,
@@ -128,7 +129,7 @@ fn spawn_launcher_and_gate(
             ),
             rotation: Quat::from_rotation_z(0.1),
             ..default()
-        })
+        }))
         .id();
 
     //Sensor above gate. Used to change collider group of ball
@@ -136,21 +137,22 @@ fn spawn_launcher_and_gate(
     let gate_sensor = commands
         .spawn(Collider::cuboid(0.03, 0.003, 0.04))
         .insert(Sensor)
-        .insert(Transform::from_xyz(
+        .insert(common::board_transform(Transform::from_xyz(
             gate_sensor_position.x,
             gate_sensor_position.y,
             gate_sensor_position.z,
-        ))
+        )))
         .insert(GateSensor)
         .id();
 
-    commands.entity(floor.unwrap()).add_children(&[
+    let _ = (
+        floor,
         launcher,
         gate_anchor,
         launcher_gate,
         gate_sensor,
         gate_collider,
-    ]);
+    );
 }
 
 fn launcher_movement(
@@ -173,7 +175,7 @@ fn launcher_movement(
 fn handle_gate_sensor_events(
     query_gate_sensors: Query<Entity, With<GateSensor>>,
     mut query_balls: Query<(Entity, &mut CollisionGroups), With<Ball>>,
-    mut contact_events: EventReader<CollisionEvent>,
+    mut contact_events: MessageReader<CollisionEvent>,
 ) {
     for contact_event in contact_events.read() {
         for sensor_entity in query_gate_sensors.iter() {

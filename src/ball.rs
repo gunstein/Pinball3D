@@ -75,7 +75,9 @@ pub fn spawn_single_ball(
             combine_rule: CoefficientCombineRule::Min,
         })
         .insert(Collider::ball(0.015))
-        .insert(Transform::from_xyz(position.x, position.y, position.z))
+        .insert(common::board_transform(Transform::from_xyz(
+            position.x, position.y, position.z,
+        )))
         .insert(ExternalForce {
             force: Vec3::new(0.0, 0.0, 0.0),
             torque: Vec3::new(0.0, 0.0, 0.0),
@@ -100,8 +102,12 @@ pub fn spawn_single_ball(
 
 fn push_ball_to_floor(
     mut query_balls: Query<(&mut ExternalForce, &mut Velocity, &Transform, &Collider), With<Ball>>,
-    rapier_context: ReadDefaultRapierContext,
+    rapier_context: ReadRapierContext,
 ) {
+    let Ok(rapier_context) = rapier_context.single() else {
+        return;
+    };
+
     for (mut ball_force, _ball_velocity, ball_transform, ball_collider) in query_balls.iter_mut() {
         let max_toi = 100.0;
         let cast_velocity = Vec3::new(0.0, 0.0, -1.0);
@@ -120,7 +126,7 @@ fn push_ball_to_floor(
             ball_transform.translation,
             ball_transform.rotation,
             cast_velocity,
-            ball_collider,
+            ball_collider.into(),
             ShapeCastOptions::with_max_time_of_impact(max_toi),
             filter,
         ) {
@@ -134,7 +140,7 @@ fn push_ball_to_floor(
 }
 
 fn handle_ball_intersections_with_bottom_wall(
-    rapier_context: ReadDefaultRapierContext,
+    rapier_context: ReadRapierContext,
     query_ball: Query<(Entity, &MaterialColor), With<Ball>>,
     query_bottom_wall: Query<Entity, With<BottomWall>>,
     mut commands: Commands,
@@ -142,6 +148,10 @@ fn handle_ball_intersections_with_bottom_wall(
     mut materials: ResMut<Assets<StandardMaterial>>,
     end_game: Res<common::EndGame>,
 ) {
+    let Ok(rapier_context) = rapier_context.single() else {
+        return;
+    };
+
     for entity_bottom_wall in query_bottom_wall.iter() {
         for (entity_ball, material_color) in query_ball.iter() {
             /* Find the intersection pair, if it exists, between two colliders. */

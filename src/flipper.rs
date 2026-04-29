@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
+use super::common;
 use super::Floor;
 use super::HalfHeight;
 
@@ -9,11 +10,13 @@ pub struct FlipperPlugin;
 #[derive(Component)]
 struct LeftFlipper {
     curr_angle: f32,
+    base_rotation: Quat,
 }
 
 #[derive(Component)]
 struct RightFlipper {
     curr_angle: f32,
+    base_rotation: Quat,
 }
 
 impl Plugin for FlipperPlugin {
@@ -84,15 +87,21 @@ fn spawn_flippers(
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(Transform::from_xyz(
+        .insert(common::board_transform(Transform::from_xyz(
             left_flipper_position.x,
             left_flipper_position.y,
             left_flipper_position.z,
-        ))
-        .insert(LeftFlipper { curr_angle: 0.0 })
+        )))
+        .insert(LeftFlipper {
+            curr_angle: 0.0,
+            base_rotation: common::board_transform(Transform::from_xyz(
+                left_flipper_position.x,
+                left_flipper_position.y,
+                left_flipper_position.z,
+            ))
+            .rotation,
+        })
         .id();
-
-    commands.entity(floor.unwrap()).add_child(left_flipper);
 
     let right_flipper = commands
         .spawn((
@@ -118,7 +127,7 @@ fn spawn_flippers(
                 collider_lower_box.clone(),
             ),
         ]))
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 right_flipper_position.x,
                 right_flipper_position.y,
@@ -126,15 +135,27 @@ fn spawn_flippers(
             ),
             rotation: Quat::from_rotation_z(-std::f32::consts::PI),
             ..default()
-        })
+        }))
         .insert(CollisionGroups {
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(RightFlipper { curr_angle: 0.0 })
+        .insert(RightFlipper {
+            curr_angle: 0.0,
+            base_rotation: common::board_transform(Transform {
+                translation: Vec3::new(
+                    right_flipper_position.x,
+                    right_flipper_position.y,
+                    right_flipper_position.z,
+                ),
+                rotation: Quat::from_rotation_z(-std::f32::consts::PI),
+                ..default()
+            })
+            .rotation,
+        })
         .id();
 
-    commands.entity(floor.unwrap()).add_child(right_flipper);
+    let _ = (floor, left_flipper, right_flipper);
 }
 
 fn left_flipper_movement(
@@ -153,8 +174,8 @@ fn left_flipper_movement(
 
         new_angle += change_angle;
         let new_clamped_angle = new_angle.clamp(-0.3, 0.3);
-        let pivot_rotation = Quat::from_rotation_z(new_clamped_angle - left_flipper.curr_angle);
-        left_flipper_transform.rotate_local(pivot_rotation);
+        left_flipper_transform.rotation =
+            left_flipper.base_rotation * Quat::from_rotation_z(new_clamped_angle);
         left_flipper.curr_angle = new_clamped_angle;
     }
 }
@@ -175,8 +196,8 @@ fn right_flipper_movement(
 
         new_angle += change_angle;
         let new_clamped_angle = new_angle.clamp(-0.3, 0.3);
-        let pivot_rotation = Quat::from_rotation_z(new_clamped_angle - right_flipper.curr_angle);
-        right_flipper_transform.rotate_local(pivot_rotation);
+        right_flipper_transform.rotation =
+            right_flipper.base_rotation * Quat::from_rotation_z(new_clamped_angle);
         right_flipper.curr_angle = new_clamped_angle;
     }
 }

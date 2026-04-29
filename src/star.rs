@@ -27,9 +27,6 @@ impl Plugin for StarPlugin {
 }
 
 #[derive(Default, Component)]
-struct Star;
-
-#[derive(Default, Component)]
 struct CollectorSensor;
 
 fn spawn_star(
@@ -125,7 +122,7 @@ fn spawn_star(
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -133,7 +130,7 @@ fn spawn_star(
             ),
             //rotation: Quat::from_rotation_z(-1.1),
             ..default()
-        })
+        }))
         .insert(common::DespawnInEndGame)
         .id();
 
@@ -145,7 +142,7 @@ fn spawn_star(
             memberships: Group::GROUP_5,
             filters: Group::GROUP_3,
         })
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -153,7 +150,7 @@ fn spawn_star(
             ),
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             ..default()
-        })
+        }))
         .insert(common::DespawnInEndGame)
         .id();
 
@@ -162,7 +159,7 @@ fn spawn_star(
     let collector_sensor = commands
         .spawn(Sensor)
         .insert(Collider::cuboid(0.07, 0.07, 0.001))
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 collector_collider_position.x,
                 collector_collider_position.y,
@@ -170,7 +167,7 @@ fn spawn_star(
             ),
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             ..default()
-        })
+        }))
         .insert(CollectorSensor)
         .insert(common::DespawnInEndGame)
         .id();
@@ -202,7 +199,7 @@ fn spawn_star(
             memberships: Group::GROUP_1,
             filters: Group::GROUP_3,
         })
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 starramp_position.x,
                 starramp_position.y,
@@ -211,7 +208,7 @@ fn spawn_star(
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0)
                 * Quat::from_rotation_y(-std::f32::consts::PI / 6.0),
             ..default()
-        })
+        }))
         .id();
 
     let mut floor = None;
@@ -219,18 +216,19 @@ fn spawn_star(
         floor = Some(entity);
     }
 
-    commands.entity(floor.unwrap()).add_children(&[
+    let _ = (
+        floor,
         collector_collider,
         oneway_collector_lid,
         collector_sensor,
         starramp,
-    ]);
+    );
 }
 
 fn handle_star_ball_sensor_events(
     query_collector_sensors: Query<Entity, With<CollectorSensor>>,
     mut query_balls: Query<(Entity, &mut CollisionGroups), With<Ball>>,
-    mut contact_events: EventReader<CollisionEvent>,
+    mut contact_events: MessageReader<CollisionEvent>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -304,7 +302,7 @@ fn despawn_collector_when_endgame(
         if end_game.0 == true {
             //  Despawn collector, lid, sensor and right-down bumper.
             for entity_to_despawn in query_despawn_entities.iter() {
-                commands.entity(entity_to_despawn).despawn_recursive();
+                commands.entity(entity_to_despawn).despawn();
             }
             // remove GROUP_5 on all balls
             for (_entity_ball, mut collision_group) in query_balls.iter_mut() {

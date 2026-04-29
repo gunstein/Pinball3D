@@ -57,7 +57,7 @@ fn spawn_target(
             target_width / 2.0,
             target_height / 2.0,
         ))
-        .insert(Transform {
+        .insert(super::common::board_transform(Transform {
             translation: Vec3::new(
                 target_position.x,
                 target_position.y,
@@ -65,17 +65,17 @@ fn spawn_target(
             ),
             rotation: target_rotation,
             ..default()
-        })
+        }))
         .insert(Target)
         .id();
 
-    commands.entity(floor.unwrap()).add_child(target);
+    let _ = (floor, target);
 }
 
 fn handle_target_events(
     query_targets: Query<Entity, With<Target>>,
     mut query_balls: Query<(Entity, &mut ExternalImpulse, &mut Velocity), With<Ball>>,
-    mut contact_events: EventReader<CollisionEvent>,
+    mut contact_events: MessageReader<CollisionEvent>,
 ) {
     for contact_event in contact_events.read() {
         for entity in query_targets.iter() {

@@ -5,6 +5,7 @@ use bevy_rapier3d::prelude::*;
 
 use rand::Rng;
 
+use super::common;
 use super::Ball;
 use super::Floor;
 
@@ -85,22 +86,22 @@ fn spawn_single_pin(
         ))
         .insert(RigidBody::Fixed)
         .insert(Collider::round_cylinder(pin_depth, pin_radius, 0.001))
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(position.x, position.y, position.z),
             rotation: Quat::from_rotation_x(std::f32::consts::PI / 2.0),
             ..default()
-        })
+        }))
         .insert(Restitution::coefficient(0.7))
         .insert(Pin)
         .id();
 
-    commands.entity(floor.unwrap()).add_child(pin);
+    let _ = (floor, pin);
 }
 
 fn handle_pin_events(
     mut query_pins: Query<(Entity, &Pin, &mut MeshMaterial3d<StandardMaterial>), With<Pin>>,
     mut query_balls: Query<(Entity, &mut ExternalImpulse, &Velocity), With<Ball>>,
-    mut contact_events: EventReader<CollisionEvent>,
+    mut contact_events: MessageReader<CollisionEvent>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for contact_event in contact_events.read() {

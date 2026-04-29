@@ -30,9 +30,6 @@ pub struct DarkColor(pub Color);
 #[derive(Default, Component)]
 pub struct LightColor(pub Color);
 
-#[derive(Default, Component)]
-struct StarBallSensor;
-
 //#[derive(Bundle, Default)]
 pub struct BumperBundle {
     pub position: common::Position,
@@ -131,7 +128,7 @@ pub fn spawn_single_bumper(
             bumper_width / 2.0,
             bumper_height / 2.0,
         ))
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 position.0.x,
                 position.0.y,
@@ -139,7 +136,7 @@ pub fn spawn_single_bumper(
             ),
             rotation: rotation.0,
             ..default()
-        })
+        }))
         .insert(Restitution::coefficient(0.7))
         .insert(Bumper)
         .insert(common::Position(position.0))
@@ -153,7 +150,7 @@ pub fn spawn_single_bumper(
         commands.entity(bumper).insert(common::DespawnInEndGame);
     }
 
-    commands.entity(floor.unwrap()).add_child(bumper);
+    let _ = (floor, bumper);
 }
 
 //fn respawn_bumper_to_toggle_color(mut query_bumpers: Query<(Entity, &Position, &Rotation, &TimestampLastHit, &DarkColor, &LightColor), With<Bumper>>,
@@ -199,7 +196,7 @@ fn handle_bumper_events(
     >,
     mut query_balls: Query<(Entity, &mut ExternalImpulse, &Velocity), With<Ball>>,
     time: Res<Time>,
-    mut contact_events: EventReader<CollisionEvent>,
+    mut contact_events: MessageReader<CollisionEvent>,
     //mut commands: Commands,
     //mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,

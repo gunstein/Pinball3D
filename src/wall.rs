@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use super::Pinball3DSystems;
+use super::{common, Pinball3DSystems};
 
 pub struct WallPlugin;
 
@@ -76,14 +76,7 @@ fn spawn_walls(
             Mesh3d(floor_handle.clone()),
             MeshMaterial3d(material_floor.clone()),
         ))
-        .insert(RigidBody::Fixed)
         .with_children(|children| {
-            children
-                .spawn(Collider::cuboid(0.4, 0.7, floor_half_height))
-                .insert(Transform {
-                    translation: Vec3::new(0.0, -0.3, 0.0),
-                    ..default()
-                });
             children.spawn((
                 Mesh3d(tree_quad_handle.clone()),
                 MeshMaterial3d(tree_texture_material_handle.clone()),
@@ -106,6 +99,19 @@ fn spawn_walls(
         })
         .insert(Floor)
         .insert(HalfHeight(floor_half_height))
+        .id();
+
+    let floor_collider = commands
+        .spawn(RigidBody::Fixed)
+        .insert(Collider::cuboid(0.4, 0.7, floor_half_height))
+        .insert(CollisionGroups {
+            memberships: Group::GROUP_1,
+            filters: Group::GROUP_3,
+        })
+        .insert(common::board_transform(Transform {
+            translation: Vec3::new(0.0, -0.3, 0.0),
+            ..default()
+        }))
         .id();
 
     //Outer wall
@@ -179,11 +185,11 @@ fn spawn_walls(
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(Transform::from_xyz(
+        .insert(common::board_transform(Transform::from_xyz(
             outer_wall_position.x,
             outer_wall_position.y,
             outer_wall_position.z,
-        ))
+        )))
         .id();
 
     //Left flipper wall
@@ -203,7 +209,7 @@ fn spawn_walls(
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 left_flipper_wall_position.x,
                 left_flipper_wall_position.y,
@@ -211,7 +217,7 @@ fn spawn_walls(
             ),
             rotation: Quat::from_rotation_z(1.1),
             ..default()
-        })
+        }))
         .id();
 
     //Right flipper wall
@@ -230,7 +236,7 @@ fn spawn_walls(
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 right_flipper_wall_position.x,
                 right_flipper_wall_position.y,
@@ -238,7 +244,7 @@ fn spawn_walls(
             ),
             rotation: Quat::from_rotation_z(-1.1),
             ..default()
-        })
+        }))
         .id();
 
     //Launcher wall
@@ -269,21 +275,22 @@ fn spawn_walls(
             memberships: Group::GROUP_2,
             filters: Group::GROUP_3,
         })
-        .insert(Transform {
+        .insert(common::board_transform(Transform {
             translation: Vec3::new(
                 launcher_wall_position.x,
                 launcher_wall_position.y,
                 launcher_wall_position.z,
             ),
             ..default()
-        })
+        }))
         .id();
 
-    //Add all walls as children to floor
-    commands.entity(floor).add_children(&[
+    let _ = (
+        floor,
+        floor_collider,
         outer_wall,
         left_flipper_wall,
         right_flipper_wall,
         launcher_wall,
-    ]);
+    );
 }

@@ -42,7 +42,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Pinball3d".to_string(),
-                resolution: (360.0, 640.0).into(),
+                resolution: (360, 640).into(),
                 ..default()
             }),
             ..default()
@@ -73,8 +73,8 @@ fn setup(
     mut commands: Commands,
     mut rapier_config: Query<&mut RapierConfiguration, With<DefaultRapierContext>>,
 ) {
-    let mut rapier_config = rapier_config.single_mut();
-    rapier_config.gravity = Vec3::new(0.0, -0.3, -1.0);
+    let mut rapier_config = rapier_config.single_mut().unwrap();
+    rapier_config.gravity = Vec3::new(0.0, -0.3, -0.5);
 
     // camera and light
     commands.spawn((
