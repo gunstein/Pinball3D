@@ -32,10 +32,8 @@ fn spawn_flippers(
     mut materials: ResMut<Assets<StandardMaterial>>,
     query_floors: Query<(Entity, &HalfHeight), With<Floor>>,
 ) {
-    let mut floor = None;
     let mut floor_half_height = 0.0;
-    for (entity, half_height) in query_floors.iter() {
-        floor = Some(entity);
+    for (_entity, half_height) in query_floors.iter() {
         floor_half_height = half_height.0;
     }
     let left_flipper_mesh_handle: Handle<Mesh> =
@@ -59,7 +57,7 @@ fn spawn_flippers(
     let position_lower_box = Vec3::new(0.033, -0.006, flipper_half_height + floor_half_height);
     let rotation_lower_box = Quat::from_rotation_z(0.12);
 
-    let left_flipper = commands
+    commands
         .spawn((
             Mesh3d(left_flipper_mesh_handle.clone()),
             MeshMaterial3d(material.clone()),
@@ -100,10 +98,9 @@ fn spawn_flippers(
                 left_flipper_position.z,
             ))
             .rotation,
-        })
-        .id();
+        });
 
-    let right_flipper = commands
+    commands
         .spawn((
             Mesh3d(left_flipper_mesh_handle.clone()),
             MeshMaterial3d(material.clone()),
@@ -152,10 +149,7 @@ fn spawn_flippers(
                 ..default()
             })
             .rotation,
-        })
-        .id();
-
-    let _ = (floor, left_flipper, right_flipper);
+        });
 }
 
 fn left_flipper_movement(

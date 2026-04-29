@@ -84,7 +84,7 @@ fn spawn_star(
     //spawn ball_collector_collider_box
     let collector_collider_position = Vec3::new(0.0, 0.235, 0.01);
     let collector_collider_element = Collider::cuboid(0.06, 0.003, 0.07);
-    let collector_collider = commands
+    commands
         .spawn(RigidBody::Fixed)
         .with_children(|children| {
             children
@@ -129,11 +129,10 @@ fn spawn_star(
             //rotation: Quat::from_rotation_z(-1.1),
             ..default()
         }))
-        .insert(common::DespawnInEndGame)
-        .id();
+        .insert(common::DespawnInEndGame);
 
     //spwan one way lid on ball_collector_box, so that balls will stay inside box.
-    let oneway_collector_lid = commands
+    commands
         .spawn(RigidBody::Fixed)
         .insert(Collider::cuboid(0.07, 0.07, 0.001))
         .insert(CollisionGroups {
@@ -149,12 +148,11 @@ fn spawn_star(
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0),
             ..default()
         }))
-        .insert(common::DespawnInEndGame)
-        .id();
+        .insert(common::DespawnInEndGame);
 
     //spawn star_ball_sensor. Used to detect balls arriving in star and spawn new ball in launcher.
     //  also change group of ball so one way lid does its job.
-    let collector_sensor = commands
+    commands
         .spawn(Sensor)
         .insert(Collider::cuboid(0.07, 0.07, 0.001))
         .insert(common::board_transform(Transform {
@@ -167,8 +165,7 @@ fn spawn_star(
             ..default()
         }))
         .insert(CollectorSensor)
-        .insert(common::DespawnInEndGame)
-        .id();
+        .insert(common::DespawnInEndGame);
 
     //Starramp
     let starramp_height = 0.06;
@@ -182,10 +179,10 @@ fn spawn_star(
     )));
     let starramp_material = materials.add(Color::srgba(1.0, 1.0, 0.0, 0.8));
 
-    let starramp = commands
+    commands
         .spawn((
-            Mesh3d(starramp_mesh_handle.clone()),
-            MeshMaterial3d(starramp_material.clone()),
+            Mesh3d(starramp_mesh_handle),
+            MeshMaterial3d(starramp_material),
         ))
         .insert(RigidBody::Fixed)
         .insert(Collider::cuboid(
@@ -206,21 +203,7 @@ fn spawn_star(
             rotation: Quat::from_rotation_z(std::f32::consts::PI / 4.0)
                 * Quat::from_rotation_y(-std::f32::consts::PI / 6.0),
             ..default()
-        }))
-        .id();
-
-    let mut floor = None;
-    for (entity, _half_height) in query_floors.iter() {
-        floor = Some(entity);
-    }
-
-    let _ = (
-        floor,
-        collector_collider,
-        oneway_collector_lid,
-        collector_sensor,
-        starramp,
-    );
+        }));
 }
 
 fn handle_star_ball_sensor_events(
@@ -305,7 +288,7 @@ fn despawn_collector_when_endgame(
             // remove GROUP_5 on all balls
             for (_entity_ball, mut collision_group) in query_balls.iter_mut() {
                 //Remove GROUP_5 from filter
-                collision_group.filters = collision_group.filters ^ Group::GROUP_5;
+                collision_group.filters ^= Group::GROUP_5;
             }
 
             *done = true;
