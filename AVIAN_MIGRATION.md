@@ -156,48 +156,29 @@ commands.spawn((
 
 ## Migrasjonssteg
 
-### Steg 1 — Avhengigheter
-- [ ] Bytt `bevy_rapier3d` med `avian3d = "0.6"` i Cargo.toml
-- [ ] Fjern `bevy_rapier3d`-import fra alle filer
+### Steg 1 — Avhengigheter ✅
+- [x] Bytt `bevy_rapier3d` med `avian3d = "0.6"` i Cargo.toml
+- [x] Fjern `bevy_rapier3d`-import fra alle filer
 
-### Steg 2 — Plugin og gravitasjon (`main.rs`)
-- [ ] Bytt `RapierPhysicsPlugin` med `PhysicsPlugins`
-- [ ] Bytt `TimestepMode` med Avian-ekvivalent
-- [ ] Bytt `RapierConfiguration` med `Gravity`-resource
-- [ ] Fjern `DefaultRapierContext`-query
+### Steg 2 — Plugin og gravitasjon (`main.rs`) ✅
+- [x] Bytt `RapierPhysicsPlugin` med `PhysicsPlugins`
+- [x] Bytt `TimestepMode` med Avian-ekvivalent
+- [x] Bytt `RapierConfiguration` med `Gravity`-resource
+- [x] Fjern `DefaultRapierContext`-query
 
 ### Steg 3 — Brett-hierarki
 - [ ] Lag en `Board`-entitet i `main.rs` eller `wall.rs`
 - [ ] Gjør alle entiteter til barn av `Board`
 - [ ] Slett `common::board_transform()` og bruk lokale koordinater
-- [ ] Slett `common.rs` (Position/Rotation allerede slettet, board_transform gjenstår)
+- [ ] Slett `common.rs` (board_transform gjenstår etter steg 4 er slettet)
 
-### Steg 4 — Kollisjonsgrupper
-- [ ] Definer `GameLayer`-enum i `common.rs` eller ny fil
-- [ ] Erstatt GROUP_1–GROUP_5 med navngitte layers i alle filer
-
-### Steg 5 — Fysikk-komponenter per fil
-- [ ] `wall.rs` — RigidBody, Collider, Friction
-- [ ] `flipper.rs` — KinematicPositionBased → Kinematic, Sleeping, Ccd, Friction
-- [ ] `ball.rs` — Velocity, ExternalForce, ExternalImpulse, Ccd, ActiveEvents
-- [ ] `launcher.rs` — Kinematic, RevoluteJoint, ImpulseJoint
-- [ ] `bumper.rs` — Restitution
-- [ ] `pin.rs` — Restitution
-- [ ] `target.rs` — ingen spesielle
-
-### Steg 6 — Kollisjons-events
-- [ ] `ball.rs` — intersection_pair → SpatialQuery
-- [ ] `bumper.rs` — MessageReader<CollisionEvent> → EventReader<CollisionStarted/Ended>
-- [ ] `pin.rs` — samme
-- [ ] `target.rs` — samme
-- [ ] `launcher.rs` — samme
-- [ ] `star.rs` — samme
-
-### Steg 7 — Shape casting
-- [ ] `ball.rs` `push_ball_to_floor` — ReadRapierContext → SpatialQuery
-
-### Steg 8 — Joints
-- [ ] `launcher.rs` — RevoluteJointBuilder/ImpulseJoint → Avian RevoluteJoint
+### Steg 4-8 — Fysikk-komponenter, events, shape casting, joints ✅ (gjort i steg 1-2)
+- [x] GameLayer enum i common.rs (GROUP_1–GROUP_5 → navngitte layers)
+- [x] Alle filer: RigidBody, Collider, Friction, Restitution, Sleeping, Ccd
+- [x] Kollisjonsevent: MessageReader<CollisionEvent> → CollisionStart/CollisionEnd
+- [x] ball.rs: intersection_pair → CollisionStart events
+- [x] ball.rs: push_ball_to_floor → SpatialQuery
+- [x] launcher.rs: RevoluteJointBuilder/ImpulseJoint → RevoluteJoint
 
 ---
 
