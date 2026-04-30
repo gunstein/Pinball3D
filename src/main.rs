@@ -1,6 +1,6 @@
+use avian3d::prelude::*;
 use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 
 mod wall;
 use wall::*;
@@ -28,7 +28,6 @@ use target::*;
 
 mod common;
 
-//This is sets for startup systems. Makes it possible to influence startup system sequence.
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 pub enum Pinball3DSystems {
     Main,
@@ -45,11 +44,8 @@ fn main() {
             }),
             ..default()
         }))
-        .insert_resource(TimestepMode::Variable {
-            max_dt: 1.0 / 60.0,
-            time_scale: 1.0,
-            substeps: 2,
-        })
+        .add_plugins(PhysicsPlugins::default())
+        .insert_resource(Gravity(Vec3::new(0.0, -0.3, -0.5)))
         .insert_resource(common::EndGame(false))
         .add_plugins((
             WallPlugin,
@@ -60,21 +56,12 @@ fn main() {
             BumperPlugin,
             StarPlugin,
             TargetPlugin,
-            RapierPhysicsPlugin::<NoUserData>::default(),
         ))
-        //.add_plugin(RapierDebugRenderPlugin::default())
         .add_systems(Startup, setup.in_set(Pinball3DSystems::Main))
         .run();
 }
 
-fn setup(
-    mut commands: Commands,
-    mut rapier_config: Query<&mut RapierConfiguration, With<DefaultRapierContext>>,
-) {
-    let mut rapier_config = rapier_config.single_mut().unwrap();
-    rapier_config.gravity = Vec3::new(0.0, -0.3, -0.5);
-
-    // camera and light
+fn setup(mut commands: Commands) {
     commands.spawn((
         PointLight {
             intensity: 1_000_000.0,
@@ -95,8 +82,7 @@ fn setup(
 
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(0.0, -0.8, 1.8).looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z), //ok
+        Transform::from_xyz(0.0, -0.8, 1.8).looking_at(Vec3::new(0.0, -0.35, 0.0), Vec3::Z),
         Tonemapping::None,
-        //transform: Transform::from_xyz(0.32, -0.8, 0.1).looking_at(Vec3::new(0.32, -0.3, 0.0), Vec3::Z),
     ));
 }

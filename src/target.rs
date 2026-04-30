@@ -1,9 +1,10 @@
+use avian3d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 
 use super::Ball;
 use super::Floor;
 use super::HalfHeight;
+use super::common;
 
 pub struct TargetPlugin;
 
@@ -31,54 +32,44 @@ fn spawn_target(
     let target_height = 0.1;
     let target_length = 0.1;
     let target_width = 0.01;
-
     let target_position = Vec3::new(-0.34, -0.09, 0.03);
     let target_rotation = Quat::from_rotation_z(std::f32::consts::PI / 2.0);
 
-    let target_mesh_handle: Handle<Mesh> = meshes.add(Mesh::from(Cuboid::new(
-        target_length,
-        target_width,
-        target_height,
-    )));
-
-    let material_target = materials.add(Color::srgb(0.93, 0.51, 0.93));
-
-    commands
-        .spawn((
-            Mesh3d(target_mesh_handle),
-            MeshMaterial3d(material_target),
-            RigidBody::Fixed,
-            Collider::cuboid(target_length / 2.0, target_width / 2.0, target_height / 2.0),
-            super::common::board_transform(Transform {
-                translation: Vec3::new(
-                    target_position.x,
-                    target_position.y,
-                    target_position.z + target_height / 2.0 + floor_half_height,
-                ),
-                rotation: target_rotation,
-                ..default()
-            }),
-            Target,
-        ));
+    commands.spawn((
+        Mesh3d(meshes.add(Mesh::from(Cuboid::new(target_length, target_width, target_height)))),
+        MeshMaterial3d(materials.add(Color::srgb(0.93, 0.51, 0.93))),
+        RigidBody::Static,
+        Collider::cuboid(target_length / 2.0, target_width / 2.0, target_height / 2.0),
+        common::board_transform(Transform {
+            translation: Vec3::new(
+                target_position.x,
+                target_position.y,
+                target_position.z + target_height / 2.0 + floor_half_height,
+            ),
+            rotation: target_rotation,
+            ..default()
+        }),
+        CollisionEventsEnabled,
+        Target,
+    ));
 }
 
 fn handle_target_events(
     query_targets: Query<Entity, With<Target>>,
-    mut query_balls: Query<(Entity, &mut ExternalImpulse, &mut Velocity), With<Ball>>,
-    mut contact_events: MessageReader<CollisionEvent>,
+    mut query_balls: Query<(Entity, Forces, &mut LinearVelocity), With<Ball>>,
+    mut contact_events: MessageReader<CollisionStart>,
 ) {
-    for contact_event in contact_events.read() {
+    for event in contact_events.read() {
         for entity in query_targets.iter() {
-            if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
-                if h1 == &entity || h2 == &entity {
-                    //Give ball a push in starramp direction
-                    for (entity_ball, mut external_impulse, mut velocity) in query_balls.iter_mut()
-                    {
-                        if h1 == &entity_ball || h2 == &entity_ball {
-                            velocity.linvel = Vec3::ZERO;
-                            external_impulse.impulse += Vec3::new(1.0, 1.0, 0.0) * 0.000013;
-                        }
-                    }
+            if event.collider1 == entity || event.collider2 == entity {
+                let ball_entity = if event.collider1 == entity {
+                    event.collider2
+                } else {
+                    event.collider1
+                };
+                if let Ok((_, mut forces, mut velocity)) = query_balls.get_mut(ball_entity) {
+                    *velocity = LinearVelocity::ZERO;
+                    forces.apply_linear_impulse(Vec3::new(1.0, 1.0, 0.0) * 0.000013);
                 }
             }
         }

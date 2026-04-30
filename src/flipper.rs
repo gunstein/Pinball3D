@@ -1,6 +1,7 @@
+use avian3d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 
+use super::common::GameLayer;
 use super::common;
 use super::Floor;
 use super::HalfHeight;
@@ -45,7 +46,7 @@ fn spawn_flippers(
     let right_flipper_position = Vec3::new(0.1, -0.8, floor_half_height);
     let flipper_half_height = 0.05;
 
-    let collider_small_cylinder = Collider::round_cylinder(flipper_half_height, 0.007, 0.002);
+    let collider_small_cylinder = Collider::cylinder(0.007, flipper_half_height * 2.0);
     let position_small_cylinder = Vec3::new(0.07, 0.0, flipper_half_height + floor_half_height);
     let rotation_small_cylinder = Quat::from_rotation_x(std::f32::consts::PI / 2.0);
 
@@ -66,21 +67,15 @@ fn spawn_flippers(
     commands.spawn((
         Mesh3d(left_flipper_mesh_handle.clone()),
         MeshMaterial3d(material.clone()),
-        RigidBody::KinematicPositionBased,
-        Sleeping::disabled(),
-        Ccd::enabled(),
-        Friction {
-            coefficient: 0.7,
-            combine_rule: CoefficientCombineRule::Min,
-        },
+        RigidBody::Kinematic,
+        SleepingDisabled,
+        SweptCcd::default(),
+        Friction::new(0.7).with_combine_rule(CoefficientCombine::Min),
         Collider::compound(vec![
             (position_small_cylinder, rotation_small_cylinder, collider_small_cylinder.clone()),
             (position_upper_box, rotation_upper_box, collider_upper_box.clone()),
         ]),
-        CollisionGroups {
-            memberships: Group::GROUP_2,
-            filters: Group::GROUP_3,
-        },
+        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
         left_transform,
         LeftFlipper {
             curr_angle: 0.0,
@@ -97,21 +92,15 @@ fn spawn_flippers(
     commands.spawn((
         Mesh3d(left_flipper_mesh_handle.clone()),
         MeshMaterial3d(material.clone()),
-        RigidBody::KinematicPositionBased,
-        Sleeping::disabled(),
-        Ccd::enabled(),
-        Friction {
-            coefficient: 0.7,
-            combine_rule: CoefficientCombineRule::Min,
-        },
+        RigidBody::Kinematic,
+        SleepingDisabled,
+        SweptCcd::default(),
+        Friction::new(0.7).with_combine_rule(CoefficientCombine::Min),
         Collider::compound(vec![
             (position_small_cylinder, rotation_small_cylinder, collider_small_cylinder.clone()),
             (position_lower_box, rotation_lower_box, collider_lower_box.clone()),
         ]),
-        CollisionGroups {
-            memberships: Group::GROUP_2,
-            filters: Group::GROUP_3,
-        },
+        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
         right_transform,
         RightFlipper {
             curr_angle: 0.0,

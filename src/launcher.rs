@@ -1,7 +1,8 @@
+use avian3d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 
 use super::common;
+use super::common::GameLayer;
 use super::Ball;
 
 pub struct LauncherPlugin;
@@ -31,14 +32,11 @@ fn spawn_launcher_and_gate(
     commands.spawn((
         Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.02 * 2.0, 0.02 * 2.0, 0.02 * 2.0)))),
         MeshMaterial3d(materials.add(Color::srgb(1.0, 1.0, 0.0))),
-        RigidBody::KinematicPositionBased,
-        Sleeping::disabled(),
-        Ccd::enabled(),
+        RigidBody::Kinematic,
+        SleepingDisabled,
+        SweptCcd::default(),
         Collider::cuboid(0.02, 0.02, 0.02),
-        CollisionGroups {
-            memberships: Group::GROUP_2,
-            filters: Group::GROUP_3,
-        },
+        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
         common::board_transform(Transform::from_xyz(
             launcher_pos.x,
             launcher_pos.y,
@@ -51,7 +49,7 @@ fn spawn_launcher_and_gate(
 
     let gate_anchor = commands
         .spawn((
-            RigidBody::Fixed,
+            RigidBody::Static,
             common::board_transform(Transform {
                 translation: gate_anchor_pos,
                 ..default()
@@ -59,18 +57,13 @@ fn spawn_launcher_and_gate(
         ))
         .id();
 
-    let joint = RevoluteJointBuilder::new(Vec3::X)
-        .limits([0.0, std::f32::consts::PI / 2.0])
-        .local_anchor1(Vec3::new(0.015, 0.0, 0.0))
-        .local_anchor2(Vec3::new(-0.017, 0.0, 0.04));
-
-    commands
+    let launcher_gate = commands
         .spawn((
             Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.017 * 2.0, 0.003 * 2.0, 0.04 * 2.0)))),
             MeshMaterial3d(materials.add(Color::srgb(1.0, 0.0, 0.0))),
             RigidBody::Dynamic,
-            Sleeping::disabled(),
-            Ccd::enabled(),
+            SleepingDisabled,
+            SweptCcd::default(),
             common::board_transform(Transform {
                 translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z - 0.04),
                 ..default()
@@ -79,22 +72,24 @@ fn spawn_launcher_and_gate(
         .with_children(|children| {
             children.spawn((
                 Collider::cuboid(0.017, 0.003, 0.04),
-                CollisionGroups {
-                    memberships: Group::GROUP_2,
-                    filters: Group::GROUP_3,
-                },
+                CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
             ));
-            children.spawn(ImpulseJoint::new(gate_anchor, joint));
-        });
+        })
+        .id();
+
+    commands.spawn(
+        RevoluteJoint::new(gate_anchor, launcher_gate)
+            .with_hinge_axis(Vec3::X)
+            .with_angle_limits(0.0, std::f32::consts::PI / 2.0)
+            .with_local_anchor1(Vec3::new(0.015, 0.0, 0.0))
+            .with_local_anchor2(Vec3::new(-0.017, 0.0, 0.04)),
+    );
 
     let gate_collider_pos = Vec3::new(0.33, -0.41, 0.05);
     commands.spawn((
-        RigidBody::Fixed,
+        RigidBody::Static,
         Collider::cuboid(0.03, 0.003, 0.04),
-        CollisionGroups {
-            memberships: Group::GROUP_4,
-            filters: Group::GROUP_3,
-        },
+        CollisionLayers::new(GameLayer::Gate, [GameLayer::Ball]),
         common::board_transform(Transform {
             translation: gate_collider_pos,
             rotation: Quat::from_rotation_z(0.1),
@@ -106,6 +101,7 @@ fn spawn_launcher_and_gate(
     commands.spawn((
         Collider::cuboid(0.03, 0.003, 0.04),
         Sensor,
+        CollisionEventsEnabled,
         common::board_transform(Transform::from_xyz(
             gate_sensor_position.x,
             gate_sensor_position.y,
@@ -134,19 +130,23 @@ fn launcher_movement(
 
 fn handle_gate_sensor_events(
     query_gate_sensors: Query<Entity, With<GateSensor>>,
-    mut query_balls: Query<(Entity, &mut CollisionGroups), With<Ball>>,
-    mut contact_events: MessageReader<CollisionEvent>,
+    query_balls: Query<(Entity, &CollisionLayers), With<Ball>>,
+    mut contact_events: MessageReader<CollisionStart>,
+    mut commands: Commands,
 ) {
-    for contact_event in contact_events.read() {
+    for event in contact_events.read() {
         for sensor_entity in query_gate_sensors.iter() {
-            if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
-                if h1 == &sensor_entity || h2 == &sensor_entity {
-                    for (entity_ball, mut collision_group) in query_balls.iter_mut() {
-                        if h1 == &entity_ball || h2 == &entity_ball {
-                            collision_group.filters =
-                                Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3 | Group::GROUP_4;
-                        }
-                    }
+            if event.collider1 == sensor_entity || event.collider2 == sensor_entity {
+                let ball_entity = if event.collider1 == sensor_entity {
+                    event.collider2
+                } else {
+                    event.collider1
+                };
+                if let Ok((_, layers)) = query_balls.get(ball_entity) {
+                    commands.entity(ball_entity).insert(CollisionLayers {
+                        memberships: layers.memberships,
+                        filters: layers.filters | LayerMask::from(GameLayer::Gate),
+                    });
                 }
             }
         }

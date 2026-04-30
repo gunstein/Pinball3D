@@ -1,8 +1,11 @@
+use avian3d::prelude::*;
 use bevy::prelude::*;
-//use bevy_rapier3d::prelude::*;
 
 #[derive(Default, Component)]
 pub struct DespawnInEndGame;
+
+#[derive(Resource)]
+pub struct EndGame(pub bool);
 
 pub fn board_transform(transform: Transform) -> Transform {
     let board_rotation = Quat::from_rotation_x(0.12);
@@ -13,6 +16,13 @@ pub fn board_transform(transform: Transform) -> Transform {
     }
 }
 
-// This resource tracks when game is in it's last phase. All collected balls are released. And spawning of new balls is stopped.
-#[derive(Resource)]
-pub struct EndGame(pub bool);
+#[derive(PhysicsLayer, Default, Clone, Copy, Debug)]
+pub enum GameLayer {
+    #[default]
+    Default,
+    Floor,
+    Obstacles,
+    Ball,
+    Gate,
+    Lid,
+}

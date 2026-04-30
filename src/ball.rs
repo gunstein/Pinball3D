@@ -1,8 +1,9 @@
+use avian3d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 
 use super::BottomWall;
 use super::common;
+use super::common::GameLayer;
 
 pub struct BallPlugin;
 
@@ -12,7 +13,7 @@ impl Plugin for BallPlugin {
             Update,
             (
                 push_ball_to_floor,
-                handle_ball_intersections_with_bottom_wall,
+                handle_ball_collisions_with_bottom_wall,
             ),
         );
     }
@@ -51,63 +52,49 @@ pub fn spawn_single_ball(
         Mesh3d(meshes.add(Mesh::from(Sphere::new(0.015)))),
         MeshMaterial3d(materials.add(material_color.0)),
         RigidBody::Dynamic,
-        Sleeping::disabled(),
-        Ccd::enabled(),
-        Friction { coefficient: 0.1, combine_rule: CoefficientCombineRule::Min },
-        Collider::ball(0.015),
+        SleepingDisabled,
+        SweptCcd::default(),
+        Friction::new(0.1).with_combine_rule(CoefficientCombine::Min),
+        Collider::sphere(0.015),
         common::board_transform(Transform::from_translation(position)),
-        ExternalForce::default(),
-        ExternalImpulse::default(),
-        Velocity::default(),
-        ActiveEvents::COLLISION_EVENTS,
-        Restitution::coefficient(0.6),
-        CollisionGroups {
-            memberships: Group::GROUP_3,
-            filters: Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3,
-        },
+        ConstantForce(Vec3::ZERO),
+        LinearVelocity::default(),
+        CollisionEventsEnabled,
+        Restitution::new(0.6),
+        CollisionLayers::new(
+            GameLayer::Ball,
+            [GameLayer::Floor, GameLayer::Obstacles, GameLayer::Ball],
+        ),
         (material_color, Ball),
     ));
 }
 
 fn push_ball_to_floor(
-    mut query_balls: Query<(&mut ExternalForce, &Transform, &Collider), With<Ball>>,
-    rapier_context: ReadRapierContext,
+    mut query_balls: Query<(Forces, &GlobalTransform, &Collider), With<Ball>>,
+    spatial_query: SpatialQuery,
 ) {
-    let Ok(rapier_context) = rapier_context.single() else {
-        return;
-    };
+    let filter = SpatialQueryFilter::from_mask([GameLayer::Floor]);
 
-    for (mut ball_force, ball_transform, ball_collider) in query_balls.iter_mut() {
-        let filter = QueryFilter {
-            groups: Some(
-                CollisionGroups {
-                    memberships: Group::GROUP_3,
-                    filters: Group::GROUP_1,
-                }
-                .into(),
-            ),
-            ..default()
-        };
+    for (mut forces, transform, collider) in &mut query_balls {
+        let (_, rotation, translation) = transform.to_scale_rotation_translation();
 
-        if let Some((_entity, hit)) = rapier_context.cast_shape(
-            ball_transform.translation,
-            ball_transform.rotation,
-            Vec3::NEG_Z,
-            ball_collider.into(),
-            ShapeCastOptions::with_max_time_of_impact(100.0),
-            filter,
+        if let Some(hit) = spatial_query.cast_shape(
+            collider,
+            translation,
+            rotation,
+            Dir3::NEG_Z,
+            &ShapeCastConfig::from_max_distance(100.0),
+            &filter,
         ) {
-            ball_force.force = if hit.time_of_impact > 0.0 {
-                Vec3::new(0.0, 0.0, -0.0001)
-            } else {
-                Vec3::ZERO
-            };
+            if hit.distance > 0.0 {
+                forces.apply_force(Vec3::new(0.0, 0.0, -0.0001));
+            }
         }
     }
 }
 
-fn handle_ball_intersections_with_bottom_wall(
-    rapier_context: ReadRapierContext,
+fn handle_ball_collisions_with_bottom_wall(
+    mut contact_events: MessageReader<CollisionStart>,
     query_ball: Query<(Entity, &MaterialColor), With<Ball>>,
     query_bottom_wall: Query<Entity, With<BottomWall>>,
     mut commands: Commands,
@@ -115,23 +102,29 @@ fn handle_ball_intersections_with_bottom_wall(
     mut materials: ResMut<Assets<StandardMaterial>>,
     end_game: Res<common::EndGame>,
 ) {
-    let Ok(rapier_context) = rapier_context.single() else {
-        return;
-    };
+    for event in contact_events.read() {
+        let ball_entity =
+            if query_ball.contains(event.collider1) && query_bottom_wall.contains(event.collider2) {
+                event.collider1
+            } else if query_ball.contains(event.collider2)
+                && query_bottom_wall.contains(event.collider1)
+            {
+                event.collider2
+            } else {
+                continue;
+            };
 
-    for entity_bottom_wall in query_bottom_wall.iter() {
-        for (entity_ball, material_color) in query_ball.iter() {
-            if rapier_context.intersection_pair(entity_bottom_wall, entity_ball) == Some(true) {
-                commands.entity(entity_ball).despawn();
-                if !end_game.0 {
-                    spawn_single_ball(
-                        &mut commands,
-                        &mut meshes,
-                        &mut materials,
-                        INIT_BALL_POSITION,
-                        MaterialColor(material_color.0),
-                    );
-                }
+        if let Ok((_, material_color)) = query_ball.get(ball_entity) {
+            let color = material_color.0;
+            commands.entity(ball_entity).despawn();
+            if !end_game.0 {
+                spawn_single_ball(
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                    INIT_BALL_POSITION,
+                    MaterialColor(color),
+                );
             }
         }
     }

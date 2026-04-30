@@ -1,10 +1,9 @@
+use avian3d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 
 use super::Ball;
 use super::Floor;
 use super::HalfHeight;
-
 use super::common;
 
 pub struct BumperPlugin;
@@ -93,9 +92,10 @@ pub fn spawn_single_bumper(
                 rotation: config.rotation,
                 ..default()
             }),
-            RigidBody::Fixed,
+            RigidBody::Static,
             Collider::cuboid(bumper_length / 2.0, bumper_width / 2.0, bumper_height / 2.0),
-            Restitution::coefficient(0.7),
+            Restitution::new(0.7),
+            CollisionEventsEnabled,
             Bumper,
             TimestampLastHit::default(),
             DarkColor(config.dark_color.0),
@@ -139,27 +139,32 @@ fn handle_bumper_events(
         ),
         With<Bumper>,
     >,
-    mut query_balls: Query<(Entity, &mut ExternalImpulse, &Velocity), With<Ball>>,
+    mut query_balls: Query<(Entity, Forces, &LinearVelocity), With<Ball>>,
     time: Res<Time>,
-    mut contact_events: MessageReader<CollisionEvent>,
+    mut start_events: MessageReader<CollisionStart>,
+    mut end_events: MessageReader<CollisionEnd>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for contact_event in contact_events.read() {
+    for event in start_events.read() {
         for (entity, mut timestamp_last_hit, light_color, mut material) in query_bumpers.iter_mut()
         {
-            if let CollisionEvent::Started(h1, h2, _event_flag) = contact_event {
-                if h1 == &entity || h2 == &entity {
-                    *timestamp_last_hit = TimestampLastHit(time.elapsed_secs_f64());
-                    *material = MeshMaterial3d(materials.add(light_color.0));
-                }
+            if event.collider1 == entity || event.collider2 == entity {
+                *timestamp_last_hit = TimestampLastHit(time.elapsed_secs_f64());
+                *material = MeshMaterial3d(materials.add(light_color.0));
             }
-            if let CollisionEvent::Stopped(h1, h2, _event_flag) = contact_event {
-                if h1 == &entity || h2 == &entity {
-                    for (entity_ball, mut external_impulse, velocity) in query_balls.iter_mut() {
-                        if h1 == &entity_ball || h2 == &entity_ball {
-                            external_impulse.impulse += velocity.linvel.normalize() * 0.000003;
-                        }
-                    }
+        }
+    }
+
+    for event in end_events.read() {
+        for (entity, ..) in query_bumpers.iter() {
+            if event.collider1 == entity || event.collider2 == entity {
+                let ball_entity = if event.collider1 == entity {
+                    event.collider2
+                } else {
+                    event.collider1
+                };
+                if let Ok((_, mut forces, velocity)) = query_balls.get_mut(ball_entity) {
+                    forces.apply_linear_impulse(velocity.normalize_or_zero() * 0.000003);
                 }
             }
         }

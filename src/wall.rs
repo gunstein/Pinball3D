@@ -1,6 +1,7 @@
+use avian3d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 
+use super::common::GameLayer;
 use super::{common, Pinball3DSystems};
 
 pub struct WallPlugin;
@@ -64,10 +65,7 @@ fn spawn_walls(
         .spawn((
             Mesh3d(asset_server.load("floor.glb#Mesh0/Primitive0")),
             MeshMaterial3d(materials.add(Color::srgb(0.0, 0.0, 1.0))),
-            CollisionGroups {
-                memberships: Group::GROUP_1,
-                filters: Group::GROUP_3,
-            },
+            CollisionLayers::new(GameLayer::Floor, [GameLayer::Ball]),
             Transform {
                 rotation: Quat::from_rotation_x(0.12),
                 ..default()
@@ -89,45 +87,39 @@ fn spawn_walls(
         });
 
     commands.spawn((
-        RigidBody::Fixed,
+        RigidBody::Static,
         Collider::cuboid(0.4, 0.7, floor_half_height),
-        CollisionGroups {
-            memberships: Group::GROUP_1,
-            filters: Group::GROUP_3,
-        },
+        CollisionLayers::new(GameLayer::Floor, [GameLayer::Ball]),
         common::board_transform(Transform {
             translation: Vec3::new(0.0, -0.3, 0.0),
             ..default()
         }),
     ));
 
-    //Outer wall
-    let mut heights = Vec::new();
+    // Outer wall — half-circle collider via heightfield
+    let num_cols: usize = 21;
     let radius: f32 = 0.36;
     let radius_squared: f32 = radius * radius;
-    let num_cols = 21;
     let step_size = (radius * 2.0) / (num_cols as f32 - 1.0);
-    for step in 0..num_cols {
-        let x = -radius + (step as f32 * step_size);
-        let y = (radius_squared - x * x).sqrt();
-        heights.push(y);
-        heights.push(y);
-    }
+    let row: Vec<f32> = (0..num_cols)
+        .map(|step| {
+            let x = -radius + (step as f32 * step_size);
+            (radius_squared - x * x).sqrt()
+        })
+        .collect();
+    let heights_2d = vec![row.clone(), row];
 
     commands
         .spawn((
             Mesh3d(asset_server.load("outer_wall.glb#Mesh0/Primitive0")),
             MeshMaterial3d(materials.add(Color::srgb(0.0, 1.0, 0.0))),
-            RigidBody::Fixed,
-            CollisionGroups {
-                memberships: Group::GROUP_2,
-                filters: Group::GROUP_3,
-            },
+            RigidBody::Static,
+            CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
             common::board_transform(Transform::default()),
         ))
         .with_children(|children| {
             children.spawn((
-                Collider::heightfield(heights, 2, num_cols, Vec3::new(0.72, 1.0, 0.1)),
+                Collider::heightfield(heights_2d, Vec3::new(0.72, 1.0, 0.1)),
                 Transform::from_xyz(0.0, -0.01, 0.05),
             ));
             children.spawn((
@@ -141,23 +133,20 @@ fn spawn_walls(
             children.spawn((
                 Collider::cuboid(0.38, 0.01, 0.05),
                 Sensor,
+                CollisionEventsEnabled,
                 Transform::from_xyz(0.0, -1.0, 0.06),
                 BottomWall,
             ));
         });
 
-    //Left flipper wall
     let material_flipper_wall = materials.add(Color::srgb(0.0, 1.0, 1.0));
 
     commands.spawn((
         Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.14 * 2.0, 0.05 * 2.0)))),
         MeshMaterial3d(material_flipper_wall.clone()),
-        RigidBody::Fixed,
+        RigidBody::Static,
         Collider::cuboid(0.01, 0.14, 0.05),
-        CollisionGroups {
-            memberships: Group::GROUP_2,
-            filters: Group::GROUP_3,
-        },
+        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
         common::board_transform(Transform {
             translation: Vec3::new(-0.24, -0.72, 0.06),
             rotation: Quat::from_rotation_z(1.1),
@@ -165,16 +154,12 @@ fn spawn_walls(
         }),
     ));
 
-    //Right flipper wall
     commands.spawn((
         Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.1 * 2.0, 0.05 * 2.0)))),
         MeshMaterial3d(material_flipper_wall),
-        RigidBody::Fixed,
+        RigidBody::Static,
         Collider::cuboid(0.01, 0.1, 0.05),
-        CollisionGroups {
-            memberships: Group::GROUP_2,
-            filters: Group::GROUP_3,
-        },
+        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
         common::board_transform(Transform {
             translation: Vec3::new(0.2, -0.74, 0.06),
             rotation: Quat::from_rotation_z(-1.1),
@@ -182,16 +167,12 @@ fn spawn_walls(
         }),
     ));
 
-    //Launcher wall
     commands
         .spawn((
             Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.28 * 2.0, 0.05 * 2.0)))),
             MeshMaterial3d(materials.add(Color::srgba(0.0, 1.0, 1.0, 0.5))),
-            RigidBody::Fixed,
-            CollisionGroups {
-                memberships: Group::GROUP_2,
-                filters: Group::GROUP_3,
-            },
+            RigidBody::Static,
+            CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
             common::board_transform(Transform {
                 translation: Vec3::new(0.3, -0.71, 0.06),
                 ..default()
@@ -199,8 +180,9 @@ fn spawn_walls(
         ))
         .with_children(|children| {
             children.spawn(Collider::cuboid(0.01, 0.28, 0.05));
+            // Small cylinder on top to avoid ball getting stuck
             children.spawn((
-                Collider::cylinder(0.05, 0.01),
+                Collider::cylinder(0.01, 0.10),
                 Transform {
                     translation: Vec3::new(0.0, 0.28, 0.0),
                     rotation: Quat::from_rotation_x(std::f32::consts::PI / 2.0),
