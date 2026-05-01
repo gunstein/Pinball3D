@@ -296,18 +296,23 @@ fn kick_ball_from_active_flipper(
 }
 
 fn drive_ball_from_active_flippers(
-    flippers: Query<&Flipper>,
-    mut balls: Query<(&Position, &mut LinearVelocity), With<Ball>>,
+    collisions: Collisions,
+    flippers: Query<(Entity, &Flipper)>,
+    mut balls: Query<(Entity, &Position, &mut LinearVelocity), With<Ball>>,
 ) {
     let board_rotation = Quat::from_rotation_x(BOARD_TILT);
 
-    for (ball_position, mut velocity) in &mut balls {
+    for (ball_entity, ball_position, mut velocity) in &mut balls {
         let ball_local = board_rotation.inverse() * ball_position.0;
         let mut velocity_local = board_rotation.inverse() * velocity.0;
         let mut changed = false;
 
-        for flipper in &flippers {
+        for (flipper_entity, flipper) in &flippers {
             if flipper.angular_speed * flipper.side.active_direction() <= ACTIVE_SPEED_THRESHOLD {
+                continue;
+            }
+
+            if !collisions.contains(ball_entity, flipper_entity) {
                 continue;
             }
 
