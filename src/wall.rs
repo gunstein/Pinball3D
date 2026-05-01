@@ -1,8 +1,9 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 
+use super::common;
 use super::common::GameLayer;
-use super::{common, Pinball3DSystems};
+use super::Pinball3DSystems;
 
 pub struct WallPlugin;
 
@@ -32,6 +33,25 @@ fn spawn_walls(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    fn spawn_wall_segment(commands: &mut Commands, start: Vec2, end: Vec2, thickness: f32) {
+        let delta = end - start;
+        let center = (start + end) * 0.5;
+        let length = delta.length();
+        let angle = delta.y.atan2(delta.x);
+
+        commands.spawn((
+            RigidBody::Static,
+            Collider::cuboid(length + thickness, thickness, 0.1),
+            Friction::ZERO.with_combine_rule(CoefficientCombine::Min),
+            CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
+            common::board_transform(Transform {
+                translation: Vec3::new(center.x, center.y, 0.06),
+                rotation: Quat::from_rotation_z(angle),
+                ..default()
+            }),
+        ));
+    }
+
     let tree_texture_handle = asset_server.load("xmas_tree.png");
     let tree_aspect = 1.8;
     let tree_quad_width = 0.5;
@@ -66,10 +86,7 @@ fn spawn_walls(
             Mesh3d(asset_server.load("floor.glb#Mesh0/Primitive0")),
             MeshMaterial3d(materials.add(Color::srgb(0.0, 0.0, 1.0))),
             CollisionLayers::new(GameLayer::Floor, [GameLayer::Ball]),
-            Transform {
-                rotation: Quat::from_rotation_x(0.12),
-                ..default()
-            },
+            common::board_transform(Transform::default()),
             Floor,
             HalfHeight(floor_half_height),
         ))
@@ -88,7 +105,7 @@ fn spawn_walls(
 
     commands.spawn((
         RigidBody::Static,
-        Collider::cuboid(0.4, 0.7, floor_half_height),
+        Collider::cuboid(0.8, 1.4, floor_half_height * 2.0),
         CollisionLayers::new(GameLayer::Floor, [GameLayer::Ball]),
         common::board_transform(Transform {
             translation: Vec3::new(0.0, -0.3, 0.0),
@@ -96,48 +113,62 @@ fn spawn_walls(
         }),
     ));
 
-    // Outer wall — half-circle collider via heightfield
-    let num_cols: usize = 21;
-    let radius: f32 = 0.36;
-    let radius_squared: f32 = radius * radius;
-    let step_size = (radius * 2.0) / (num_cols as f32 - 1.0);
-    let row: Vec<f32> = (0..num_cols)
-        .map(|step| {
-            let x = -radius + (step as f32 * step_size);
-            (radius_squared - x * x).sqrt()
-        })
-        .collect();
-    let heights_2d = vec![row.clone(), row];
+    commands.spawn((
+        Mesh3d(asset_server.load("outer_wall.glb#Mesh0/Primitive0")),
+        MeshMaterial3d(materials.add(Color::srgb(0.0, 1.0, 0.0))),
+        common::board_transform(Transform::default()),
+    ));
 
-    commands
-        .spawn((
-            Mesh3d(asset_server.load("outer_wall.glb#Mesh0/Primitive0")),
-            MeshMaterial3d(materials.add(Color::srgb(0.0, 1.0, 0.0))),
-            RigidBody::Static,
-            CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
-            common::board_transform(Transform::default()),
-        ))
-        .with_children(|children| {
-            children.spawn((
-                Collider::heightfield(heights_2d, Vec3::new(0.72, 1.0, 0.1)),
-                Transform::from_xyz(0.0, -0.01, 0.05),
-            ));
-            children.spawn((
-                Collider::cuboid(0.01, 0.5, 0.05),
-                Transform::from_xyz(-0.37, -0.51, 0.06),
-            ));
-            children.spawn((
-                Collider::cuboid(0.01, 0.5, 0.05),
-                Transform::from_xyz(0.37, -0.51, 0.06),
-            ));
-            children.spawn((
-                Collider::cuboid(0.38, 0.01, 0.05),
-                Sensor,
-                CollisionEventsEnabled,
-                Transform::from_xyz(0.0, -1.0, 0.06),
-                BottomWall,
-            ));
-        });
+    let wall_thickness = 0.025;
+    spawn_wall_segment(
+        &mut commands,
+        Vec2::new(-0.37, -0.98),
+        Vec2::new(-0.37, -0.060),
+        wall_thickness,
+    );
+    spawn_wall_segment(
+        &mut commands,
+        Vec2::new(0.37, -0.98),
+        Vec2::new(0.37, -0.060),
+        wall_thickness,
+    );
+
+    let arc_center = Vec2::new(0.0, 0.004);
+    let arc_radius = 0.376;
+    let arc_start = std::f32::consts::PI + 0.172;
+    let arc_end = -0.172;
+    let arc_segments = 20;
+    let mut previous_arc_point = None;
+    for index in 0..=arc_segments {
+        let t = index as f32 / arc_segments as f32;
+        let angle = arc_start + (arc_end - arc_start) * t;
+        let point = arc_center + Vec2::new(angle.cos(), angle.sin()) * arc_radius;
+        if let Some(previous_point) = previous_arc_point {
+            spawn_wall_segment(&mut commands, previous_point, point, wall_thickness);
+        }
+        previous_arc_point = Some(point);
+    }
+
+    commands.spawn((
+        RigidBody::Static,
+        Collider::cuboid(0.76, 0.02, 0.1),
+        Sensor,
+        Restitution::ZERO,
+        Friction::new(0.8),
+        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
+        CollisionEventsEnabled,
+        common::board_transform(Transform::from_xyz(0.0, -1.0, 0.06)),
+        BottomWall,
+    ));
+
+    commands.spawn((
+        RigidBody::Static,
+        Collider::cuboid(0.045, 0.02, 0.06),
+        Restitution::ZERO,
+        Friction::new(0.8),
+        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
+        common::board_transform(Transform::from_xyz(0.355, -1.0, 0.04)),
+    ));
 
     let material_flipper_wall = materials.add(Color::srgb(0.0, 1.0, 1.0));
 
@@ -145,7 +176,7 @@ fn spawn_walls(
         Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.14 * 2.0, 0.05 * 2.0)))),
         MeshMaterial3d(material_flipper_wall.clone()),
         RigidBody::Static,
-        Collider::cuboid(0.01, 0.14, 0.05),
+        Collider::cuboid(0.02, 0.28, 0.1),
         CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
         common::board_transform(Transform {
             translation: Vec3::new(-0.24, -0.72, 0.06),
@@ -158,7 +189,7 @@ fn spawn_walls(
         Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.1 * 2.0, 0.05 * 2.0)))),
         MeshMaterial3d(material_flipper_wall),
         RigidBody::Static,
-        Collider::cuboid(0.01, 0.1, 0.05),
+        Collider::cuboid(0.02, 0.2, 0.1),
         CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
         common::board_transform(Transform {
             translation: Vec3::new(0.2, -0.74, 0.06),
@@ -167,27 +198,18 @@ fn spawn_walls(
         }),
     ));
 
-    commands
-        .spawn((
-            Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.01 * 2.0, 0.28 * 2.0, 0.05 * 2.0)))),
-            MeshMaterial3d(materials.add(Color::srgba(0.0, 1.0, 1.0, 0.5))),
-            RigidBody::Static,
-            CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
-            common::board_transform(Transform {
-                translation: Vec3::new(0.3, -0.71, 0.06),
-                ..default()
-            }),
-        ))
-        .with_children(|children| {
-            children.spawn(Collider::cuboid(0.01, 0.28, 0.05));
-            // Small cylinder on top to avoid ball getting stuck
-            children.spawn((
-                Collider::cylinder(0.01, 0.10),
-                Transform {
-                    translation: Vec3::new(0.0, 0.28, 0.0),
-                    rotation: Quat::from_rotation_x(std::f32::consts::PI / 2.0),
-                    ..default()
-                },
-            ));
-        });
+    let launcher_wall_height = 0.05;
+    commands.spawn((
+        Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.02, 0.56, launcher_wall_height)))),
+        MeshMaterial3d(materials.add(Color::srgba(0.0, 1.0, 1.0, 0.5))),
+        RigidBody::Static,
+        Collider::cuboid(0.02, 0.56, launcher_wall_height),
+        Restitution::ZERO,
+        Friction::ZERO.with_combine_rule(CoefficientCombine::Min),
+        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
+        common::board_transform(Transform {
+            translation: Vec3::new(0.315, -0.71, 0.01 + launcher_wall_height * 0.5),
+            ..default()
+        }),
+    ));
 }

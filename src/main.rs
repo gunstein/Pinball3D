@@ -1,5 +1,7 @@
+use avian3d::dynamics::solver::SolverConfig;
 use avian3d::prelude::*;
 use bevy::core_pipeline::tonemapping::Tonemapping;
+use bevy::gizmos::{config::GizmoConfig, AppGizmoBuilder};
 use bevy::prelude::*;
 
 mod wall;
@@ -45,7 +47,22 @@ fn main() {
             ..default()
         }))
         .add_plugins(PhysicsPlugins::default())
-        .insert_resource(Gravity(Vec3::new(0.0, -0.3, -0.5)))
+        .insert_gizmo_config(
+            PhysicsGizmos {
+                collider_color: Some(Color::srgb(1.0, 0.45, 0.0)),
+                ..PhysicsGizmos::none()
+            },
+            GizmoConfig::default(),
+        )
+        .insert_resource(Gravity(Vec3::new(0.0, -0.55, -0.65)))
+        .insert_resource(SubstepCount(50))
+        .insert_resource(SolverConfig {
+            contact_damping_ratio: 12.0,
+            contact_frequency_factor: 2.0,
+            max_overlap_solve_speed: 8.0,
+            restitution_iterations: 2,
+            ..default()
+        })
         .insert_resource(common::EndGame(false))
         .add_plugins((
             WallPlugin,

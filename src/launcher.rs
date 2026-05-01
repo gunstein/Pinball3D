@@ -1,154 +1,84 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 
-use super::common;
-use super::common::GameLayer;
 use super::Ball;
 
 pub struct LauncherPlugin;
 
 impl Plugin for LauncherPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PostStartup, spawn_launcher_and_gate)
-            .add_systems(Update, (launcher_movement, handle_gate_sensor_events));
+        app.init_resource::<LauncherState>()
+            .add_systems(Update, update_launcher)
+            .add_systems(FixedUpdate, guide_ball_in_launcher_lane);
     }
 }
 
-#[derive(Component)]
-struct Launcher {
-    start_pos: Vec3,
+#[derive(Default, Resource)]
+struct LauncherState {
+    pressed_at_secs: Option<f64>,
 }
 
-#[derive(Component)]
-struct GateSensor;
-
-fn spawn_launcher_and_gate(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let launcher_pos = Vec3::new(0.34, -0.95, 0.03);
-
-    commands.spawn((
-        Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.02 * 2.0, 0.02 * 2.0, 0.02 * 2.0)))),
-        MeshMaterial3d(materials.add(Color::srgb(1.0, 1.0, 0.0))),
-        RigidBody::Kinematic,
-        SleepingDisabled,
-        SweptCcd::default(),
-        Collider::cuboid(0.02, 0.02, 0.02),
-        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
-        common::board_transform(Transform::from_xyz(
-            launcher_pos.x,
-            launcher_pos.y,
-            launcher_pos.z,
-        )),
-        Launcher { start_pos: launcher_pos },
-    ));
-
-    let gate_anchor_pos = Vec3::new(0.3, -0.42, 0.1);
-
-    let gate_anchor = commands
-        .spawn((
-            RigidBody::Static,
-            common::board_transform(Transform {
-                translation: gate_anchor_pos,
-                ..default()
-            }),
-        ))
-        .id();
-
-    let launcher_gate = commands
-        .spawn((
-            Mesh3d(meshes.add(Mesh::from(Cuboid::new(0.017 * 2.0, 0.003 * 2.0, 0.04 * 2.0)))),
-            MeshMaterial3d(materials.add(Color::srgb(1.0, 0.0, 0.0))),
-            RigidBody::Dynamic,
-            SleepingDisabled,
-            SweptCcd::default(),
-            common::board_transform(Transform {
-                translation: Vec3::new(gate_anchor_pos.x, gate_anchor_pos.y, gate_anchor_pos.z - 0.04),
-                ..default()
-            }),
-        ))
-        .with_children(|children| {
-            children.spawn((
-                Collider::cuboid(0.017, 0.003, 0.04),
-                CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
-            ));
-        })
-        .id();
-
-    commands.spawn(
-        RevoluteJoint::new(gate_anchor, launcher_gate)
-            .with_hinge_axis(Vec3::X)
-            .with_angle_limits(0.0, std::f32::consts::PI / 2.0)
-            .with_local_anchor1(Vec3::new(0.015, 0.0, 0.0))
-            .with_local_anchor2(Vec3::new(-0.017, 0.0, 0.04)),
-    );
-
-    let gate_collider_pos = Vec3::new(0.33, -0.41, 0.05);
-    commands.spawn((
-        RigidBody::Static,
-        Collider::cuboid(0.03, 0.003, 0.04),
-        CollisionLayers::new(GameLayer::Gate, [GameLayer::Ball]),
-        common::board_transform(Transform {
-            translation: gate_collider_pos,
-            rotation: Quat::from_rotation_z(0.1),
-            ..default()
-        }),
-    ));
-
-    let gate_sensor_position = Vec3::new(0.33, -0.39, 0.05);
-    commands.spawn((
-        Collider::cuboid(0.03, 0.003, 0.04),
-        Sensor,
-        CollisionEventsEnabled,
-        common::board_transform(Transform::from_xyz(
-            gate_sensor_position.x,
-            gate_sensor_position.y,
-            gate_sensor_position.z,
-        )),
-        GateSensor,
-    ));
-}
-
-fn launcher_movement(
+fn update_launcher(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut launchers: Query<(&mut Launcher, &mut Transform)>,
+    time: Res<Time>,
+    mut launcher_state: ResMut<LauncherState>,
+    mut balls: Query<(&Position, &mut LinearVelocity), With<Ball>>,
 ) {
-    for (launcher, mut launcher_transform) in launchers.iter_mut() {
-        let mut next_ypos = launcher_transform.translation.y;
+    const CHARGE_TIME_SECS: f32 = 1.5;
+    const MIN_LAUNCH_SPEED: f32 = 2.0;
+    const MAX_LAUNCH_SPEED: f32 = 11.5;
 
-        if keyboard_input.pressed(KeyCode::Space) {
-            next_ypos += 0.03;
-        } else {
-            next_ypos -= 0.02;
+    if keyboard_input.just_pressed(KeyCode::Space) {
+        launcher_state.pressed_at_secs = Some(time.elapsed_secs_f64());
+    }
+
+    if keyboard_input.just_released(KeyCode::Space) {
+        let held_secs = launcher_state
+            .pressed_at_secs
+            .map(|pressed_at_secs| time.elapsed_secs_f64() - pressed_at_secs)
+            .unwrap_or(0.0) as f32;
+        let charge = (held_secs / CHARGE_TIME_SECS).clamp(0.0, 1.0);
+        let board_rotation = Quat::from_rotation_x(0.12);
+        let launch_strength = charge * charge;
+        let launch_speed =
+            MIN_LAUNCH_SPEED + (MAX_LAUNCH_SPEED - MIN_LAUNCH_SPEED) * launch_strength;
+        for (ball_pos, mut ball_vel) in &mut balls {
+            let ball_local = board_rotation.inverse() * ball_pos.0;
+            let ball_in_launcher_lane = ball_local.x > 0.23 && ball_local.x < 0.41;
+
+            if ball_in_launcher_lane {
+                ball_vel.0 = board_rotation * Vec3::new(0.0, launch_speed, 0.18);
+            }
         }
-        launcher_transform.translation.y =
-            next_ypos.clamp(launcher.start_pos.y, launcher.start_pos.y + 0.06);
+        launcher_state.pressed_at_secs = None;
     }
 }
 
-fn handle_gate_sensor_events(
-    query_gate_sensors: Query<Entity, With<GateSensor>>,
-    query_balls: Query<(Entity, &CollisionLayers), With<Ball>>,
-    mut contact_events: MessageReader<CollisionStart>,
-    mut commands: Commands,
-) {
-    for event in contact_events.read() {
-        for sensor_entity in query_gate_sensors.iter() {
-            if event.collider1 == sensor_entity || event.collider2 == sensor_entity {
-                let ball_entity = if event.collider1 == sensor_entity {
-                    event.collider2
-                } else {
-                    event.collider1
-                };
-                if let Ok((_, layers)) = query_balls.get(ball_entity) {
-                    commands.entity(ball_entity).insert(CollisionLayers {
-                        memberships: layers.memberships,
-                        filters: layers.filters | LayerMask::from(GameLayer::Gate),
-                    });
-                }
-            }
+fn guide_ball_in_launcher_lane(mut balls: Query<(&Position, &mut LinearVelocity), With<Ball>>) {
+    let board_rotation = Quat::from_rotation_x(0.12);
+    let target_x = 0.342;
+
+    for (position, mut velocity) in &mut balls {
+        let ball_local = board_rotation.inverse() * position.0;
+        let mut velocity_local = board_rotation.inverse() * velocity.0;
+        let ball_in_launcher_lane = ball_local.x > 0.30
+            && ball_local.x < 0.38
+            && ball_local.y < -0.62
+            && velocity_local.y > 0.1;
+
+        if ball_in_launcher_lane {
+            let correction = (target_x - ball_local.x) * 8.0;
+            velocity_local.x = correction.clamp(-0.30, 0.30);
+            velocity.0 = board_rotation * velocity_local;
+        } else if ball_local.x > 0.285
+            && ball_local.x < 0.35
+            && ball_local.y > -0.72
+            && ball_local.y < -0.48
+            && velocity_local.length() < 0.25
+        {
+            velocity_local.x = -0.65;
+            velocity_local.y = -0.25;
+            velocity.0 = board_rotation * velocity_local;
         }
     }
 }

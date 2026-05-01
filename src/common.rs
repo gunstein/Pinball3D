@@ -23,6 +23,5 @@ pub enum GameLayer {
     Floor,
     Obstacles,
     Ball,
-    Gate,
     Lid,
 }

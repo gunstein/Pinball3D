@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use super::common;
+use super::common::GameLayer;
 use super::Ball;
 
 pub struct PinPlugin;
@@ -64,13 +65,14 @@ fn spawn_single_pin(
         }),
         Restitution::new(0.7),
         CollisionEventsEnabled,
+        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
         Pin,
     ));
 }
 
 fn handle_pin_events(
     mut query_pins: Query<(Entity, &mut MeshMaterial3d<StandardMaterial>), With<Pin>>,
-    mut query_balls: Query<(Entity, Forces, &LinearVelocity), With<Ball>>,
+    mut query_balls: Query<(Entity, Forces), With<Ball>>,
     mut start_events: MessageReader<CollisionStart>,
     mut end_events: MessageReader<CollisionEnd>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -100,7 +102,8 @@ fn handle_pin_events(
                 } else {
                     event.collider1
                 };
-                if let Ok((_, mut forces, velocity)) = query_balls.get_mut(ball_entity) {
+                if let Ok((_, mut forces)) = query_balls.get_mut(ball_entity) {
+                    let velocity = forces.linear_velocity();
                     forces.apply_linear_impulse(velocity.normalize_or_zero() * 0.000003);
                 }
             }

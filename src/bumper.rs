@@ -1,10 +1,11 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 
+use super::common;
+use super::common::GameLayer;
 use super::Ball;
 use super::Floor;
 use super::HalfHeight;
-use super::common;
 
 pub struct BumperPlugin;
 
@@ -59,7 +60,13 @@ fn spawn_bumpers(
     ];
 
     for config in &init_bumpers {
-        spawn_single_bumper(&mut commands, config, &mut meshes, &mut materials, &query_floors);
+        spawn_single_bumper(
+            &mut commands,
+            config,
+            &mut meshes,
+            &mut materials,
+            &query_floors,
+        );
     }
 }
 
@@ -81,7 +88,11 @@ pub fn spawn_single_bumper(
 
     let bumper = commands
         .spawn((
-            Mesh3d(meshes.add(Mesh::from(Cuboid::new(bumper_length, bumper_width, bumper_height)))),
+            Mesh3d(meshes.add(Mesh::from(Cuboid::new(
+                bumper_length,
+                bumper_width,
+                bumper_height,
+            )))),
             MeshMaterial3d(materials.add(config.dark_color.0)),
             common::board_transform(Transform {
                 translation: Vec3::new(
@@ -93,7 +104,8 @@ pub fn spawn_single_bumper(
                 ..default()
             }),
             RigidBody::Static,
-            Collider::cuboid(bumper_length / 2.0, bumper_width / 2.0, bumper_height / 2.0),
+            Collider::cuboid(bumper_length, bumper_width, bumper_height),
+            CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
             Restitution::new(0.7),
             CollisionEventsEnabled,
             Bumper,
@@ -139,7 +151,7 @@ fn handle_bumper_events(
         ),
         With<Bumper>,
     >,
-    mut query_balls: Query<(Entity, Forces, &LinearVelocity), With<Ball>>,
+    mut query_balls: Query<(Entity, Forces), With<Ball>>,
     time: Res<Time>,
     mut start_events: MessageReader<CollisionStart>,
     mut end_events: MessageReader<CollisionEnd>,
@@ -163,7 +175,8 @@ fn handle_bumper_events(
                 } else {
                     event.collider1
                 };
-                if let Ok((_, mut forces, velocity)) = query_balls.get_mut(ball_entity) {
+                if let Ok((_, mut forces)) = query_balls.get_mut(ball_entity) {
+                    let velocity = forces.linear_velocity();
                     forces.apply_linear_impulse(velocity.normalize_or_zero() * 0.000003);
                 }
             }

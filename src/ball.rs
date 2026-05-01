@@ -1,9 +1,9 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 
-use super::BottomWall;
 use super::common;
 use super::common::GameLayer;
+use super::BottomWall;
 
 pub struct BallPlugin;
 
@@ -11,10 +11,7 @@ impl Plugin for BallPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(PostStartup, spawn_balls).add_systems(
             Update,
-            (
-                push_ball_to_floor,
-                handle_ball_collisions_with_bottom_wall,
-            ),
+            (push_ball_to_floor, handle_ball_collisions_with_bottom_wall),
         );
     }
 }
@@ -25,7 +22,7 @@ pub struct Ball;
 #[derive(Default, Component)]
 pub struct MaterialColor(pub Color);
 
-pub const INIT_BALL_POSITION: Vec3 = Vec3::new(0.32, -0.83, 0.02);
+pub const INIT_BALL_POSITION: Vec3 = Vec3::new(0.342, -0.83, 0.02);
 
 fn spawn_balls(
     mut commands: Commands,
@@ -57,7 +54,6 @@ pub fn spawn_single_ball(
         Friction::new(0.1).with_combine_rule(CoefficientCombine::Min),
         Collider::sphere(0.015),
         common::board_transform(Transform::from_translation(position)),
-        ConstantForce(Vec3::ZERO),
         LinearVelocity::default(),
         CollisionEventsEnabled,
         Restitution::new(0.6),
@@ -95,7 +91,7 @@ fn push_ball_to_floor(
 
 fn handle_ball_collisions_with_bottom_wall(
     mut contact_events: MessageReader<CollisionStart>,
-    query_ball: Query<(Entity, &MaterialColor), With<Ball>>,
+    query_ball: Query<(Entity, &MaterialColor, &Position), With<Ball>>,
     query_bottom_wall: Query<Entity, With<BottomWall>>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -103,18 +99,25 @@ fn handle_ball_collisions_with_bottom_wall(
     end_game: Res<common::EndGame>,
 ) {
     for event in contact_events.read() {
-        let ball_entity =
-            if query_ball.contains(event.collider1) && query_bottom_wall.contains(event.collider2) {
-                event.collider1
-            } else if query_ball.contains(event.collider2)
-                && query_bottom_wall.contains(event.collider1)
-            {
-                event.collider2
-            } else {
-                continue;
-            };
+        let ball_entity = if query_ball.contains(event.collider1)
+            && query_bottom_wall.contains(event.collider2)
+        {
+            event.collider1
+        } else if query_ball.contains(event.collider2)
+            && query_bottom_wall.contains(event.collider1)
+        {
+            event.collider2
+        } else {
+            continue;
+        };
 
-        if let Ok((_, material_color)) = query_ball.get(ball_entity) {
+        if let Ok((_, material_color, position)) = query_ball.get(ball_entity) {
+            let board_rotation = Quat::from_rotation_x(0.12);
+            let ball_local = board_rotation.inverse() * position.0;
+            if ball_local.x > 0.29 {
+                continue;
+            }
+
             let color = material_color.0;
             commands.entity(ball_entity).despawn();
             if !end_game.0 {

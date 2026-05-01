@@ -1,10 +1,11 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 
+use super::common;
+use super::common::GameLayer;
 use super::Ball;
 use super::Floor;
 use super::HalfHeight;
-use super::common;
 
 pub struct TargetPlugin;
 
@@ -36,10 +37,14 @@ fn spawn_target(
     let target_rotation = Quat::from_rotation_z(std::f32::consts::PI / 2.0);
 
     commands.spawn((
-        Mesh3d(meshes.add(Mesh::from(Cuboid::new(target_length, target_width, target_height)))),
+        Mesh3d(meshes.add(Mesh::from(Cuboid::new(
+            target_length,
+            target_width,
+            target_height,
+        )))),
         MeshMaterial3d(materials.add(Color::srgb(0.93, 0.51, 0.93))),
         RigidBody::Static,
-        Collider::cuboid(target_length / 2.0, target_width / 2.0, target_height / 2.0),
+        Collider::cuboid(target_length, target_width, target_height),
         common::board_transform(Transform {
             translation: Vec3::new(
                 target_position.x,
@@ -50,13 +55,14 @@ fn spawn_target(
             ..default()
         }),
         CollisionEventsEnabled,
+        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
         Target,
     ));
 }
 
 fn handle_target_events(
     query_targets: Query<Entity, With<Target>>,
-    mut query_balls: Query<(Entity, Forces, &mut LinearVelocity), With<Ball>>,
+    mut query_balls: Query<(Entity, Forces), With<Ball>>,
     mut contact_events: MessageReader<CollisionStart>,
 ) {
     for event in contact_events.read() {
@@ -67,8 +73,8 @@ fn handle_target_events(
                 } else {
                     event.collider1
                 };
-                if let Ok((_, mut forces, mut velocity)) = query_balls.get_mut(ball_entity) {
-                    *velocity = LinearVelocity::ZERO;
+                if let Ok((_, mut forces)) = query_balls.get_mut(ball_entity) {
+                    *forces.linear_velocity_mut() = Vec3::ZERO;
                     forces.apply_linear_impulse(Vec3::new(1.0, 1.0, 0.0) * 0.000013);
                 }
             }

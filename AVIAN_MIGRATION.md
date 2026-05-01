@@ -128,29 +128,19 @@ fn system(spatial_query: SpatialQuery) {
 
 ## Brett-hierarki (det store gevinsten)
 
-Med Avian kan alle spill-objekter være barn av et brett-entity:
+Avian støtter collider-hierarkier, men dynamiske rigid bodies og joints ble ustabile når hele
+brettet lå under en rotert parent. Denne migreringen bruker derfor samme modell som den opprinnelige
+Rapier-versjonen: objektene får ferdig rotert world-space transform via `common::board_transform()`.
 
 ```rust
-// Spawn brett-entity
-let board = commands.spawn((
-    Transform {
-        rotation: Quat::from_rotation_x(0.12),
-        // scale: Vec3::splat(factor) — for fremtidig oppløsningsstøtte
-        ..default()
-    },
-    GlobalTransform::default(),
-    Visibility::default(),
-)).id();
-
-// Alle objekter bruker lokale koordinater og parentes til board
 commands.spawn((
     RigidBody::Static,
     Collider::cuboid(...),
-    Transform::from_xyz(0.0, -0.3, 0.0), // lokale koordinater
-)).set_parent(board);
+    common::board_transform(Transform::from_xyz(0.0, -0.3, 0.0)),
+));
 ```
 
-`common::board_transform()` og `common.rs` kan slettes.
+`common.rs` beholdes for `board_transform()`, `GameLayer`, `EndGame` og `DespawnInEndGame`.
 
 ---
 
@@ -166,11 +156,10 @@ commands.spawn((
 - [x] Bytt `RapierConfiguration` med `Gravity`-resource
 - [x] Fjern `DefaultRapierContext`-query
 
-### Steg 3 — Brett-hierarki
-- [ ] Lag en `Board`-entitet i `main.rs` eller `wall.rs`
-- [ ] Gjør alle entiteter til barn av `Board`
-- [ ] Slett `common::board_transform()` og bruk lokale koordinater
-- [ ] Slett `common.rs` (board_transform gjenstår etter steg 4 er slettet)
+### Steg 3 — Brett-transform
+- [x] Behold `common::board_transform()` for world-space fysikktransforms
+- [x] Ikke parent dynamiske rigid bodies eller joints under en rotert `Board`
+- [ ] Vurder en egen, ren visuell board-parent senere hvis det trengs for skalering
 
 ### Steg 4-8 — Fysikk-komponenter, events, shape casting, joints ✅ (gjort i steg 1-2)
 - [x] GameLayer enum i common.rs (GROUP_1–GROUP_5 → navngitte layers)
