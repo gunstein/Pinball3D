@@ -41,12 +41,28 @@ fn spawn_walls(
 
         commands.spawn((
             RigidBody::Static,
-            Collider::cuboid(length + thickness, thickness, 0.1),
+            Collider::cuboid(length, thickness, 0.1),
+            Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
             Friction::ZERO.with_combine_rule(CoefficientCombine::Min),
             CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
             common::board_transform(Transform {
                 translation: Vec3::new(center.x, center.y, 0.06),
                 rotation: Quat::from_rotation_z(angle),
+                ..default()
+            }),
+        ));
+    }
+
+    fn spawn_wall_joint(commands: &mut Commands, position: Vec2, thickness: f32) {
+        commands.spawn((
+            RigidBody::Static,
+            Collider::cylinder(thickness * 0.5, 0.1),
+            Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
+            Friction::ZERO.with_combine_rule(CoefficientCombine::Min),
+            CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
+            common::board_transform(Transform {
+                translation: Vec3::new(position.x, position.y, 0.06),
+                rotation: Quat::from_rotation_x(std::f32::consts::FRAC_PI_2),
                 ..default()
             }),
         ));
@@ -123,26 +139,29 @@ fn spawn_walls(
     spawn_wall_segment(
         &mut commands,
         Vec2::new(-0.37, -0.98),
-        Vec2::new(-0.37, -0.060),
+        Vec2::new(-0.37, 0.004),
         wall_thickness,
     );
     spawn_wall_segment(
         &mut commands,
         Vec2::new(0.37, -0.98),
-        Vec2::new(0.37, -0.060),
+        Vec2::new(0.37, 0.004),
         wall_thickness,
     );
 
     let arc_center = Vec2::new(0.0, 0.004);
-    let arc_radius = 0.376;
-    let arc_start = std::f32::consts::PI + 0.172;
-    let arc_end = -0.172;
-    let arc_segments = 20;
+    let arc_radius = 0.37;
+    let arc_start = std::f32::consts::PI;
+    let arc_end = 0.0;
+    let arc_segments = 24;
     let mut previous_arc_point = None;
     for index in 0..=arc_segments {
         let t = index as f32 / arc_segments as f32;
         let angle = arc_start + (arc_end - arc_start) * t;
         let point = arc_center + Vec2::new(angle.cos(), angle.sin()) * arc_radius;
+        if index > 0 && index < arc_segments {
+            spawn_wall_joint(&mut commands, point, wall_thickness);
+        }
         if let Some(previous_point) = previous_arc_point {
             spawn_wall_segment(&mut commands, previous_point, point, wall_thickness);
         }
