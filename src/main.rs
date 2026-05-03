@@ -46,14 +46,8 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins(PhysicsPlugins::default())
-        .insert_gizmo_config(
-            PhysicsGizmos {
-                collider_color: Some(Color::srgb(1.0, 0.45, 0.0)),
-                ..PhysicsGizmos::none()
-            },
-            GizmoConfig::default(),
-        )
+        .add_plugins((PhysicsPlugins::default(), PhysicsDebugPlugin::default()))
+        .insert_gizmo_config(PhysicsGizmos::none(), GizmoConfig::default())
         .insert_resource(Gravity(Vec3::new(0.0, -0.55, -0.65)))
         .insert_resource(SubstepCount(50))
         .insert_resource(SolverConfig {

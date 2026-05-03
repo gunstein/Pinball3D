@@ -3,24 +3,15 @@ use bevy::prelude::*;
 
 use super::common;
 use super::common::GameLayer;
-use super::Ball;
 use super::Floor;
 use super::HalfHeight;
 
 pub struct FlipperPlugin;
 
-const BOARD_TILT: f32 = 0.12;
-const FLIPPER_FORWARD_SPEED: f32 = 36.0;
+const FLIPPER_FORWARD_SPEED: f32 = 54.0;
 const FLIPPER_RETURN_SPEED: f32 = 4.2;
 const FLIPPER_MIN_ANGLE: f32 = -0.3;
 const FLIPPER_MAX_ANGLE: f32 = 0.3;
-const ACTIVE_SPEED_THRESHOLD: f32 = 8.0;
-const COLLISION_KICK_Y: f32 = 1.25;
-const COLLISION_KICK_X: f32 = 0.30;
-const COLLISION_KICK_Z: f32 = 0.05;
-const DRIVE_MIN_X: f32 = 0.55;
-const DRIVE_MIN_Y: f32 = 1.25;
-const DRIVE_MIN_Z: f32 = 0.04;
 const LEFT_FLIPPER_POSITION: Vec3 = Vec3::new(-0.1, -0.8, 0.01);
 const RIGHT_FLIPPER_POSITION: Vec3 = Vec3::new(0.1, -0.8, 0.0);
 const RIGHT_COLLIDER_OFFSET: Vec3 = Vec3::new(0.0, 0.006, 0.0);
@@ -32,14 +23,11 @@ const COLLIDER_TIP_RADIUS: f32 = 0.0115;
 const COLLIDER_SIDE_THICKNESS: f32 = 0.008;
 const COLLIDER_SIDE_HEIGHT: f32 = 0.04;
 const COLLIDER_SIDE_LENGTH_EXTRA: f32 = 0.006;
-const FLIPPER_CONTACT_MIN: Vec3 = Vec3::new(-0.025, -0.035, 0.0);
-const FLIPPER_CONTACT_MAX: Vec3 = Vec3::new(0.085, 0.025, 0.0);
 
 #[derive(Component)]
 struct Flipper {
     side: FlipperSide,
     curr_angle: f32,
-    angular_speed: f32,
     base_rotation: Quat,
     pivot_position: Vec3,
     last_position: Vec3,
@@ -65,41 +53,12 @@ impl FlipperSide {
             Self::Right => -1.0,
         }
     }
-
-    fn collision_kick(self) -> Vec3 {
-        Vec3::new(
-            COLLISION_KICK_X * self.active_direction(),
-            COLLISION_KICK_Y,
-            COLLISION_KICK_Z,
-        )
-    }
-
-    fn drive_ball(self, velocity: &mut Vec3) {
-        match self {
-            Self::Left => velocity.x = velocity.x.max(DRIVE_MIN_X),
-            Self::Right => velocity.x = velocity.x.min(-DRIVE_MIN_X),
-        }
-        velocity.y = velocity.y.max(DRIVE_MIN_Y);
-        velocity.z = velocity.z.max(DRIVE_MIN_Z);
-    }
-
-    fn flipper_to_local(self, flipper: &Flipper, ball_local: Vec3, pivot_local: Vec3) -> Vec3 {
-        let rotation = match self {
-            Self::Left => Quat::from_rotation_z(-flipper.curr_angle),
-            Self::Right => Quat::from_rotation_z(-std::f32::consts::PI - flipper.curr_angle),
-        };
-        rotation * (ball_local - pivot_local)
-    }
 }
 
 impl Plugin for FlipperPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(PostStartup, spawn_flippers)
-            .add_systems(
-                FixedUpdate,
-                (flipper_movement, drive_ball_from_active_flippers).chain(),
-            )
-            .add_systems(Update, kick_ball_from_active_flipper);
+            .add_systems(FixedUpdate, flipper_movement);
     }
 }
 
@@ -152,30 +111,33 @@ fn spawn_flipper(
     side: FlipperSide,
     collider_offset: Vec3,
 ) {
-    commands.spawn((
-        Mesh3d(mesh),
-        MeshMaterial3d(material),
-        RigidBody::Kinematic,
-        SleepingDisabled,
-        SweptCcd::NON_LINEAR,
-        Friction::new(0.35).with_combine_rule(CoefficientCombine::Min),
-        Restitution::new(0.25).with_combine_rule(CoefficientCombine::Average),
-        flipper_collider(collider_offset),
-        CollisionMargin(0.002),
-        SpeculativeMargin(0.12),
-        LinearVelocity::ZERO,
-        AngularVelocity::ZERO,
-        CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
-        transform,
-        Flipper {
+    commands
+        .spawn((
+            Mesh3d(mesh),
+            MeshMaterial3d(material),
+            RigidBody::Kinematic,
+            SleepingDisabled,
+            SweptCcd::NON_LINEAR,
+            Friction::new(2.0).with_combine_rule(CoefficientCombine::Max),
+            Restitution::new(0.25).with_combine_rule(CoefficientCombine::Average),
+            flipper_collider(collider_offset),
+            CollisionMargin(0.002),
+            SpeculativeMargin(0.12),
+            transform,
+        ))
+        .insert((
+            LinearVelocity::ZERO,
+            AngularVelocity::ZERO,
+            CollisionLayers::new(GameLayer::Obstacles, [GameLayer::Ball]),
+        ))
+        .insert(Flipper {
             side,
             curr_angle: 0.0,
-            angular_speed: 0.0,
             base_rotation: transform.rotation,
             pivot_position: transform.translation,
             last_position: transform.translation,
-        },
-    ));
+        })
+        .insert(DebugRender::collider(Color::srgb(1.0, 0.45, 0.0)));
 }
 
 fn flipper_collider(offset: Vec3) -> Collider {
@@ -241,6 +203,7 @@ fn flipper_movement(
     if delta_secs <= f32::EPSILON {
         return;
     }
+
     for (mut flipper, mut position, mut rotation, mut linear_velocity, mut angular_velocity) in
         flippers.iter_mut()
     {
@@ -260,82 +223,6 @@ fn flipper_movement(
         linear_velocity.0 = (position.0 - flipper.last_position) / delta_secs;
         angular_velocity.0 = rotation.0 * Vec3::Z * angular_speed;
         flipper.curr_angle = new_angle;
-        flipper.angular_speed = angular_speed;
         flipper.last_position = position.0;
     }
-}
-
-fn kick_ball_from_active_flipper(
-    mut collision_events: MessageReader<CollisionStart>,
-    flippers: Query<&Flipper>,
-    mut balls: Query<(Entity, &mut LinearVelocity), With<Ball>>,
-) {
-    let board_rotation = Quat::from_rotation_x(BOARD_TILT);
-
-    for event in collision_events.read() {
-        let (ball_entity, flipper_entity) = if balls.get(event.collider1).is_ok() {
-            (event.collider1, event.collider2)
-        } else if balls.get(event.collider2).is_ok() {
-            (event.collider2, event.collider1)
-        } else {
-            continue;
-        };
-
-        let Ok(flipper) = flippers.get(flipper_entity) else {
-            continue;
-        };
-
-        if flipper.angular_speed * flipper.side.active_direction() <= ACTIVE_SPEED_THRESHOLD {
-            continue;
-        };
-
-        if let Ok((_, mut velocity)) = balls.get_mut(ball_entity) {
-            velocity.0 += board_rotation * flipper.side.collision_kick();
-        };
-    }
-}
-
-fn drive_ball_from_active_flippers(
-    collisions: Collisions,
-    flippers: Query<(Entity, &Flipper)>,
-    mut balls: Query<(Entity, &Position, &mut LinearVelocity), With<Ball>>,
-) {
-    let board_rotation = Quat::from_rotation_x(BOARD_TILT);
-
-    for (ball_entity, ball_position, mut velocity) in &mut balls {
-        let ball_local = board_rotation.inverse() * ball_position.0;
-        let mut velocity_local = board_rotation.inverse() * velocity.0;
-        let mut changed = false;
-
-        for (flipper_entity, flipper) in &flippers {
-            if flipper.angular_speed * flipper.side.active_direction() <= ACTIVE_SPEED_THRESHOLD {
-                continue;
-            }
-
-            if !collisions.contains(ball_entity, flipper_entity) {
-                continue;
-            }
-
-            let pivot_local = board_rotation.inverse() * flipper.pivot_position;
-            let flipper_local = flipper
-                .side
-                .flipper_to_local(flipper, ball_local, pivot_local);
-
-            if ball_is_on_flipper(flipper_local) {
-                flipper.side.drive_ball(&mut velocity_local);
-                changed = true;
-            }
-        }
-
-        if changed {
-            velocity.0 = board_rotation * velocity_local;
-        }
-    }
-}
-
-fn ball_is_on_flipper(position: Vec3) -> bool {
-    position.x > FLIPPER_CONTACT_MIN.x
-        && position.x < FLIPPER_CONTACT_MAX.x
-        && position.y > FLIPPER_CONTACT_MIN.y
-        && position.y < FLIPPER_CONTACT_MAX.y
 }
